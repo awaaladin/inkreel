@@ -51,7 +51,7 @@ def _dump(data: Any) -> bytes:
 
 
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS turns(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, series TEXT, src TEXT, label TEXT, state INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS turns(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, series TEXT, src TEXT, label TEXT, state INTEGER DEFAULT 0, grp TEXT);
 CREATE TABLE IF NOT EXISTS turn_files(turn_id INTEGER, path TEXT, before BLOB, after BLOB);
 CREATE TABLE IF NOT EXISTS ops(turn_id INTEGER, seq INTEGER, name TEXT, args TEXT, ok INTEGER, msg TEXT);
 CREATE TABLE IF NOT EXISTS snapshots(id INTEGER PRIMARY KEY AUTOINCREMENT, series TEXT, name TEXT, ts REAL, blob BLOB);
@@ -63,8 +63,9 @@ CREATE TABLE IF NOT EXISTS jobs(id INTEGER PRIMARY KEY AUTOINCREMENT, series TEX
 
 
 class Tx:
-    def __init__(self, store: "Store", series: str | None, label: str, src: str):
-        self.store, self.series, self.label, self.src = store, series, label, src
+    def __init__(self, store: "Store", series: str | None, label: str, src: str, group: str | None = None):
+        self.store, self.series, self.label, self.src, self.group = store, series, label, src, group
+        self.discard = False                 # dry run: compute everything, write nothing
         self.cache: dict[str, Any] = {}      # rel path -> parsed json (deep) or None if deleted
         self.dirty: set[str] = set()
         self.ops: list[tuple[str, dict, bool, str]] = []
@@ -148,6 +149,10 @@ class Store:
         (self.root / ".inkreel").mkdir(exist_ok=True)
         self.db = sqlite3.connect(self.root / ".inkreel" / "index.sqlite", check_same_thread=False)
         self.db.executescript(SCHEMA)
+        try:
+            self.db.execute("ALTER TABLE turns ADD COLUMN grp TEXT")
+        except sqlite3.OperationalError:
+            pass  # column already there
         self.db.commit()
 
     # ------------------------------------------------------------------ series scaffolding
@@ -207,14 +212,18 @@ class Store:
 
     # ------------------------------------------------------------------ turns
     @contextmanager
-    def turn(self, series: str | None, label: str = "edit", src: str = "user"):
-        """All-or-nothing group of changes = one undo step. Exceptions inside discard everything."""
+    def turn(self, series: str | None, label: str = "edit", src: str = "user", group: str | None = None, discard: bool = False):
+        """All-or-nothing group of changes = one undo step. Exceptions inside discard everything.
+        Turns sharing a `group` (one director request = several tool batches) are undone together."""
         with self.lock:
-            tx = Tx(self, series, label, src)
+            tx = Tx(self, series, label, src, group)
+            tx.discard = discard
             yield tx
             self._commit(tx)
 
     def _commit(self, tx: Tx) -> int | None:
+        if tx.discard:
+            return None
         changed: list[tuple[str, bytes | None, bytes | None]] = []
         for rel in sorted(tx.dirty):
             p = self.root / rel
@@ -237,7 +246,7 @@ class Store:
         tid = None
         if changed:
             cur.execute("UPDATE turns SET state=2 WHERE state=1 AND series IS ?", (tx.series,))  # new work kills redo
-            cur.execute("INSERT INTO turns(ts,series,src,label) VALUES(?,?,?,?)", (time.time(), tx.series, tx.src, tx.label))
+            cur.execute("INSERT INTO turns(ts,series,src,label,grp) VALUES(?,?,?,?,?)", (time.time(), tx.series, tx.src, tx.label, tx.group))
             tid = cur.lastrowid
             for rel, before, after in changed:
                 cur.execute("INSERT INTO turn_files VALUES(?,?,?,?)", (tid, rel, gzip.compress(before) if before is not None else None,
@@ -294,21 +303,29 @@ class Store:
 
     def undo(self, series: str | None) -> dict | None:
         with self.lock:
-            r = self.db.execute("SELECT id,label FROM turns WHERE state=0 AND series IS ? ORDER BY id DESC LIMIT 1", (series,)).fetchone()
+            r = self.db.execute("SELECT id,label,grp FROM turns WHERE state=0 AND series IS ? ORDER BY id DESC LIMIT 1", (series,)).fetchone()
             if not r:
                 return None
-            out = self._flip(r[0], series, True)
-            out["label"] = r[1]
-            return out
+            ids = [r[0]]
+            if r[2]:
+                ids = [x[0] for x in self.db.execute("SELECT id FROM turns WHERE state=0 AND series IS ? AND grp=? ORDER BY id DESC", (series, r[2])).fetchall()]
+            files: list[str] = []
+            for i in ids:
+                files += self._flip(i, series, True)["files"]
+            return {"turn": ids[0], "turns": len(ids), "files": files, "label": r[1]}
 
     def redo(self, series: str | None) -> dict | None:
         with self.lock:
-            r = self.db.execute("SELECT id,label FROM turns WHERE state=1 AND series IS ? ORDER BY id DESC LIMIT 1", (series,)).fetchone()
+            r = self.db.execute("SELECT id,label,grp FROM turns WHERE state=1 AND series IS ? ORDER BY id DESC LIMIT 1", (series,)).fetchone()
             if not r:
                 return None
-            out = self._flip(r[0], series, False)
-            out["label"] = r[1]
-            return out
+            ids = [r[0]]
+            if r[2]:
+                ids = [x[0] for x in self.db.execute("SELECT id FROM turns WHERE state=1 AND series IS ? AND grp=? ORDER BY id ASC", (series, r[2])).fetchall()]
+            files: list[str] = []
+            for i in ids:
+                files += self._flip(i, series, False)["files"]
+            return {"turn": ids[-1], "turns": len(ids), "files": files, "label": r[1]}
 
     def history(self, series: str | None, limit: int = 30) -> list[dict]:
         rows = self.db.execute("SELECT id,ts,src,label,state FROM turns WHERE series IS ? ORDER BY id DESC LIMIT ?", (series, limit)).fetchall()
@@ -318,6 +335,24 @@ class Store:
             out.append({"id": tid, "ts": ts, "src": src, "label": label, "state": ["applied", "undone", "dead"][state],
                         "ops": len(ops), "failed": sum(1 for _, ok in ops if not ok)})
         return out
+
+    # ------------------------------------------------------------------ chat memory (director)
+    def chat_add(self, series: str, role: str, content: str) -> None:
+        with self.lock:
+            self.db.execute("INSERT INTO chat(series,ts,role,content) VALUES(?,?,?,?)", (series, time.time(), role, content))
+            self.db.commit()
+
+    def chat_load(self, series: str, n: int = 12) -> list[dict]:
+        rows = self.db.execute("SELECT role,content FROM chat WHERE series=? ORDER BY id DESC LIMIT ?", (series, n)).fetchall()
+        msgs = [{"role": r, "content": c} for r, c in reversed(rows)]
+        while msgs and msgs[0]["role"] != "user":   # API wants a user turn first
+            msgs.pop(0)
+        return msgs
+
+    def chat_clear(self, series: str) -> None:
+        with self.lock:
+            self.db.execute("DELETE FROM chat WHERE series=?", (series,))
+            self.db.commit()
 
     # ------------------------------------------------------------------ snapshots
     def _series_files(self, sid: str) -> dict[str, bytes]:
