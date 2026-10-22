@@ -1,0 +1,64 @@
+{
+ "desc": "Rising punch from a crouch. Hits at 52%.",
+ "category": "attack",
+ "dur": 0.8,
+ "mask": "full",
+ "trail": "hand",
+ "hit": 0.52,
+ "reach": 110,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.3,
+   "pose": {
+    "torso": 24,
+    "head": -4,
+    "aF": 8,
+    "eF": 85,
+    "aB": 40,
+    "eB": 110,
+    "tF": 60,
+    "kF": -90,
+    "tB": -8,
+    "kB": -70,
+    "rx": -0.02
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.52,
+   "pose": {
+    "torso": -6,
+    "head": -12,
+    "aF": 150,
+    "eF": 30,
+    "aB": 30,
+    "eB": 115,
+    "tF": 40,
+    "kF": -30,
+    "tB": -10,
+    "kB": -8,
+    "ry": -0.05,
+    "rx": 0.07
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.72,
+   "pose": {
+    "torso": -2,
+    "aF": 145,
+    "eF": 28,
+    "ry": -0.03
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

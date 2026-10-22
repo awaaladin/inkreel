@@ -1,0 +1,62 @@
+{
+ "desc": "Wide swinging haymaker. Slower, heavier than punch. Hits at 50%.",
+ "category": "attack",
+ "dur": 0.8,
+ "mask": "full",
+ "trail": "hand",
+ "hit": 0.5,
+ "reach": 125,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.32,
+   "pose": {
+    "torso": -16,
+    "head": -4,
+    "aF": -25,
+    "eF": 90,
+    "aB": 50,
+    "eB": 110,
+    "tF": 36,
+    "kF": -40,
+    "tB": -28,
+    "rx": -0.05
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "torso": 32,
+    "head": -8,
+    "aF": 96,
+    "eF": 55,
+    "aB": 30,
+    "eB": 120,
+    "tF": 55,
+    "kF": -50,
+    "tB": -36,
+    "kB": -16,
+    "rx": 0.12
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.72,
+   "pose": {
+    "torso": 28,
+    "aF": 85,
+    "eF": 50,
+    "rx": 0.11
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

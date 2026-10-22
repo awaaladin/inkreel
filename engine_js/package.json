@@ -1,0 +1,7 @@
+{
+  "name": "inkreel-engine-js",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Prototype JS engine behind RenderBackend (removed once the Rust core passes golden parity)",
+  "dependencies": { "@napi-rs/canvas": "^0.1.65" }
+}

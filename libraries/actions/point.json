@@ -1,0 +1,37 @@
+{
+ "desc": "Point forward with the front arm.",
+ "category": "acting",
+ "dur": 1.2,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.22,
+   "pose": {
+    "aF": 85,
+    "eF": 3,
+    "torso": 6,
+    "head": -3,
+    "wpn": 0
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.8,
+   "pose": {
+    "aF": 85,
+    "eF": 3,
+    "torso": 6,
+    "head": -3
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

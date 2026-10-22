@@ -1,0 +1,375 @@
+{
+  "_doc": "Joint angles are degrees measured from straight-down, + = toward the direction the character faces. torso/rot + = lean forward; elbow + bends forearm forward/up; knee - bends shin backward. rx/ry are root offsets in character-heights (ry negative = up). wpn rotates the weapon relative to the forearm. Missing joints in a key pose = whatever the current stance is.",
+  "stances": {
+    "idle":    {"torso":2,"head":0,"aF":7,"eF":16,"aB":-7,"eB":14,"tF":6,"kF":-4,"tB":-6,"kB":-4,"wpn":8,"rx":0,"ry":0,"rot":0},
+    "fight":   {"torso":9,"head":-3,"aF":50,"eF":100,"aB":36,"eB":115,"tF":34,"kF":-40,"tB":-26,"kB":-22,"wpn":-35,"rx":0,"ry":0,"rot":0},
+    "crouch":  {"torso":22,"head":-8,"aF":35,"eF":70,"aB":25,"eB":80,"tF":75,"kF":-125,"tB":25,"kB":-105,"wpn":0,"rx":0,"ry":0,"rot":0},
+    "down":    {"torso":0,"head":6,"aF":25,"eF":15,"aB":-20,"eB":20,"tF":12,"kF":-12,"tB":4,"kB":-18,"wpn":0,"rx":0,"ry":0,"rot":-90},
+    "kneel":   {"torso":6,"head":6,"aF":12,"eF":25,"aB":-4,"eB":20,"tF":80,"kF":-95,"tB":-12,"kB":-150,"wpn":8,"rx":0,"ry":0,"rot":0},
+    "tired":   {"torso":22,"head":14,"aF":14,"eF":10,"aB":-2,"eB":8,"tF":12,"kF":-10,"tB":-8,"kB":-12,"wpn":8,"rx":0,"ry":0,"rot":0},
+    "arms_crossed": {"torso":1,"head":0,"aF":12,"eF":78,"aB":8,"eB":88,"tF":6,"kF":-4,"tB":-6,"kB":-4,"wpn":0,"rx":0,"ry":0,"rot":0}
+  },
+  "emotions": {
+    "neutral":    {"brow":0,"browY":0,"eye":1,"mouth":"flat"},
+    "happy":      {"brow":-0.3,"browY":0.05,"eye":0.85,"mouth":"smile"},
+    "angry":      {"brow":1,"browY":-0.05,"eye":0.8,"mouth":"frown"},
+    "sad":        {"brow":-1,"browY":0,"eye":0.9,"mouth":"frown"},
+    "shocked":    {"brow":-0.4,"browY":0.35,"eye":1.35,"mouth":"o"},
+    "smirk":      {"brow":0.5,"browY":0,"eye":0.75,"mouth":"smirk"},
+    "pain":       {"brow":0.8,"browY":-0.1,"eye":0.05,"mouth":"grit"},
+    "determined": {"brow":0.7,"browY":-0.05,"eye":0.85,"mouth":"flat"},
+    "scared":     {"brow":-0.9,"browY":0.25,"eye":1.25,"mouth":"wobble"},
+    "tired":      {"brow":-0.4,"browY":-0.1,"eye":0.4,"mouth":"flat"},
+    "laugh":      {"brow":-0.2,"browY":0.1,"eye":0.15,"mouth":"laugh"},
+    "shout":      {"brow":1,"browY":0,"eye":0.8,"mouth":"shout"}
+  },
+  "actions": {
+    "punch": {
+      "desc": "Fast straight punch with the front fist. Lunges slightly forward. Hits at 46% of duration.",
+      "category": "attack", "dur": 0.65, "mask": "full", "trail": "hand", "hit": 0.46, "reach": 130,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.28,"pose":{"torso":-6,"aF":25,"eF":120,"aB":45,"eB":110,"tF":30,"kF":-45,"tB":-24,"rx":-0.03},"ease":"inOut"},
+        {"t":0.46,"pose":{"torso":24,"head":-6,"aF":88,"eF":4,"aB":20,"eB":125,"tF":48,"kF":-50,"tB":-34,"kB":-18,"rx":0.1},"ease":"snap"},
+        {"t":0.66,"pose":{"torso":20,"aF":86,"eF":6,"aB":25,"eB":120,"tF":46,"kF":-48,"tB":-32,"kB":-18,"rx":0.1},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "hook": {
+      "desc": "Wide swinging haymaker. Slower, heavier than punch. Hits at 50%.",
+      "category": "attack", "dur": 0.8, "mask": "full", "trail": "hand", "hit": 0.5, "reach": 125,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.32,"pose":{"torso":-16,"head":-4,"aF":-25,"eF":90,"aB":50,"eB":110,"tF":36,"kF":-40,"tB":-28,"rx":-0.05},"ease":"inOut"},
+        {"t":0.5,"pose":{"torso":32,"head":-8,"aF":96,"eF":55,"aB":30,"eB":120,"tF":55,"kF":-50,"tB":-36,"kB":-16,"rx":0.12},"ease":"snap"},
+        {"t":0.72,"pose":{"torso":28,"aF":85,"eF":50,"rx":0.11},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "uppercut": {
+      "desc": "Rising punch from a crouch. Hits at 52%.",
+      "category": "attack", "dur": 0.8, "mask": "full", "trail": "hand", "hit": 0.52, "reach": 110,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.3,"pose":{"torso":24,"head":-4,"aF":8,"eF":85,"aB":40,"eB":110,"tF":60,"kF":-90,"tB":-8,"kB":-70,"rx":-0.02},"ease":"inOut"},
+        {"t":0.52,"pose":{"torso":-6,"head":-12,"aF":150,"eF":30,"aB":30,"eB":115,"tF":40,"kF":-30,"tB":-10,"kB":-8,"ry":-0.05,"rx":0.07},"ease":"snap"},
+        {"t":0.72,"pose":{"torso":-2,"aF":145,"eF":28,"ry":-0.03},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "kick": {
+      "desc": "Front kick: knee chamber then snap. Hits at 45%.",
+      "category": "attack", "dur": 0.85, "mask": "full", "trail": "foot", "hit": 0.45, "reach": 150,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.3,"pose":{"torso":-4,"tF":70,"kF":-115,"aF":30,"eF":100,"aB":-10,"eB":80,"tB":-8,"kB":-8,"rx":-0.02},"ease":"inOut"},
+        {"t":0.45,"pose":{"torso":-18,"head":-4,"tF":98,"kF":-4,"aF":-10,"eF":60,"aB":60,"eB":60,"tB":-6,"kB":-6,"rx":0.04},"ease":"snap"},
+        {"t":0.68,"pose":{"torso":-16,"tF":95,"kF":-8,"aF":-8,"aB":58},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "slash_down": {
+      "desc": "Overhead chop with the held weapon (needs a weapon). Hits at 50%.",
+      "category": "attack", "dur": 0.85, "mask": "full", "trail": "weapon", "hit": 0.5, "reach": 190,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.32,"pose":{"torso":-12,"head":-6,"aF":165,"eF":25,"aB":150,"eB":40,"tF":28,"kF":-30,"tB":-30,"kB":-20,"wpn":-10,"rx":-0.04},"ease":"inOut"},
+        {"t":0.5,"pose":{"torso":30,"head":-4,"aF":62,"eF":6,"aB":60,"eB":60,"tF":55,"kF":-40,"tB":-35,"kB":-12,"wpn":0,"rx":0.14},"ease":"snap"},
+        {"t":0.72,"pose":{"torso":28,"aF":58,"eF":8,"rx":0.13},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "slash_up": {
+      "desc": "Rising diagonal slash from low-behind to high-forward (needs a weapon). Hits at 50%.",
+      "category": "attack", "dur": 0.8, "mask": "full", "trail": "weapon", "hit": 0.5, "reach": 190,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.3,"pose":{"torso":14,"head":-2,"aF":-38,"eF":20,"aB":30,"eB":100,"tF":45,"kF":-45,"tB":-30,"kB":-20,"wpn":-20,"rx":-0.03},"ease":"inOut"},
+        {"t":0.5,"pose":{"torso":-6,"head":-6,"aF":100,"eF":28,"aB":50,"eB":100,"tF":58,"kF":-40,"tB":-34,"kB":-14,"wpn":0,"rx":0.13},"ease":"snap"},
+        {"t":0.72,"pose":{"torso":-4,"aF":105,"eF":30,"rx":0.12},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "thrust": {
+      "desc": "Lunging stab straight ahead with weapon (needs a weapon). Hits at 50%.",
+      "category": "attack", "dur": 0.75, "mask": "full", "trail": "weapon", "hit": 0.5, "reach": 230,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.28,"pose":{"torso":2,"aF":30,"eF":100,"aB":40,"eB":100,"tF":32,"kF":-45,"tB":-26,"wpn":-30,"rx":-0.04},"ease":"inOut"},
+        {"t":0.5,"pose":{"torso":28,"head":-6,"aF":88,"eF":4,"aB":-10,"eB":60,"tF":72,"kF":-30,"tB":-38,"kB":-6,"wpn":0,"rx":0.18},"ease":"snap"},
+        {"t":0.7,"pose":{"torso":26,"aF":86,"eF":6,"rx":0.17},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "dash_strike": {
+      "desc": "Fast gliding dash forward ending in a thrust. Moves the character ~260px forward, so start it ~480px away. Hits at 50%.",
+      "category": "attack", "dur": 0.75, "mask": "full", "trail": "weapon", "hit": 0.5, "reach": 230, "dx": 260, "dxSpan": 0.5,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.2,"pose":{"torso":18,"aF":40,"eF":90,"aB":-30,"eB":40,"tF":50,"kF":-60,"tB":-40,"kB":-50,"wpn":-20,"rx":-0.02},"ease":"inOut"},
+        {"t":0.45,"pose":{"torso":34,"head":-8,"aF":88,"eF":4,"aB":-20,"eB":50,"tF":75,"kF":-20,"tB":-45,"kB":-8,"wpn":0,"rx":0.1},"ease":"snap"},
+        {"t":0.75,"pose":{"torso":28,"aF":86,"eF":6,"rx":0.08},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "block": {
+      "desc": "Brace and guard against an incoming hit. Use 'strike' with block:true to pair it with an attack.",
+      "category": "defense", "dur": 0.7, "mask": "full",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.18,"pose":{"torso":-8,"head":-4,"aF":70,"eF":118,"aB":62,"eB":125,"tF":38,"kF":-45,"tB":-28,"rx":-0.04,"wpn":-60},"ease":"out"},
+        {"t":0.75,"pose":{"torso":-6,"aF":68,"eF":120,"rx":-0.03},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "dodge": {
+      "desc": "Lean back and slip an attack, sliding ~35px back.",
+      "category": "defense", "dur": 0.7, "mask": "full", "dx": -35, "dxSpan": 0.5,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.28,"pose":{"torso":-30,"head":-14,"rx":-0.1,"tF":20,"kF":-30,"tB":-38,"kB":-35,"aF":30,"eF":90,"aB":10,"eB":90},"ease":"snap"},
+        {"t":0.6,"pose":{"torso":-26,"head":-10,"rx":-0.09},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "duck": {
+      "desc": "Drop low under an attack.",
+      "category": "defense", "dur": 0.7, "mask": "full",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.25,"pose":{"torso":38,"head":-12,"aF":45,"eF":100,"aB":30,"eB":110,"tF":85,"kF":-130,"tB":20,"kB":-110,"rx":-0.03},"ease":"snap"},
+        {"t":0.65,"pose":{"torso":36,"tF":84},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "hit_light": {
+      "desc": "Small flinch from a light hit. Pushed back ~25px.",
+      "category": "reaction", "dur": 0.5, "mask": "full", "face": "pain", "dx": -25, "dxSpan": 0.4,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.16,"pose":{"torso":-16,"head":-18,"aF":-5,"eF":50,"aB":-20,"eB":40,"rx":-0.06,"tF":18,"kF":-12},"ease":"snap"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "hit_heavy": {
+      "desc": "Big stagger from a strong hit. Pushed back ~90px.",
+      "category": "reaction", "dur": 0.85, "mask": "full", "face": "pain", "dx": -90, "dxSpan": 0.55,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.16,"pose":{"torso":-32,"head":-30,"rot":-10,"aF":-45,"eF":40,"aB":-60,"eB":30,"tF":30,"kF":-20,"tB":-18,"kB":-30,"rx":-0.14},"ease":"snap"},
+        {"t":0.5,"pose":{"torso":-18,"head":-16,"rot":-5,"aF":-20,"eF":40,"aB":-30,"eB":40,"rx":-0.12},"ease":"out"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "hit_knockdown": {
+      "desc": "Blasted off their feet and lands flat on their back (ends in 'down' stance). Slides ~170px back.",
+      "category": "reaction", "dur": 1.25, "mask": "full", "face": "pain", "dx": -170, "dxSpan": 0.7, "endStance": "down",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.16,"pose":{"torso":-28,"head":-26,"rot":-25,"rx":-0.12,"ry":-0.05,"aF":-60,"eF":30,"aB":-70,"eB":30,"tF":40,"kF":-30,"tB":20,"kB":-40},"ease":"snap"},
+        {"t":0.5,"pose":{"torso":-12,"rot":-68,"ry":-0.16,"aF":-30,"eF":30,"aB":-40,"eB":30,"tF":30,"kF":-30,"tB":10,"kB":-40},"ease":"out"},
+        {"t":0.82,"pose":{"torso":0,"rot":-90,"ry":-0.02,"aF":20,"eF":20,"aB":-20,"eB":20,"tF":14,"kF":-14,"tB":6,"kB":-20},"ease":"in"},
+        {"t":1,"pose":"down","ease":"out"}
+      ]
+    },
+    "getup": {
+      "desc": "Push up from lying down to standing (use after hit_knockdown / collapse). Ends in idle.",
+      "category": "recovery", "dur": 1.4, "mask": "full", "endStance": "idle",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.35,"pose":{"rot":-55,"torso":35,"head":10,"aF":60,"eF":15,"aB":45,"eB":20,"tF":75,"kF":-110,"tB":18,"kB":-100},"ease":"inOut"},
+        {"t":0.7,"pose":{"rot":-8,"torso":26,"head":0,"aF":30,"eF":60,"aB":25,"eB":70,"tF":60,"kF":-95,"tB":10,"kB":-70},"ease":"inOut"},
+        {"t":1,"pose":"idle","ease":"inOut"}
+      ]
+    },
+    "collapse": {
+      "desc": "Exhausted slow fall to the ground (ends in 'down' stance). Good for defeat.",
+      "category": "reaction", "dur": 1.8, "mask": "full", "face": "pain", "endStance": "down",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.35,"pose":{"torso":20,"head":18,"aF":10,"eF":10,"aB":-5,"eB":8,"tF":70,"kF":-110,"tB":10,"kB":-90},"ease":"inOut"},
+        {"t":0.6,"pose":{"torso":10,"rot":-20,"tF":80,"kF":-100,"tB":-10,"kB":-130,"ry":0},"ease":"in"},
+        {"t":0.85,"pose":{"rot":-80,"torso":0,"ry":-0.03},"ease":"in"},
+        {"t":1,"pose":"down","ease":"out"}
+      ]
+    },
+    "jump": {
+      "desc": "Crouch, leap straight up, tuck, land. Combine with a move for a jump across.",
+      "category": "movement", "dur": 1.0, "mask": "full",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.2,"pose":{"torso":20,"aF":-40,"eF":30,"aB":-50,"tF":60,"kF":-100,"tB":40,"kB":-90},"ease":"inOut"},
+        {"t":0.4,"pose":{"torso":5,"aF":140,"eF":20,"aB":130,"eB":20,"tF":20,"kF":-10,"tB":-10,"kB":-10,"ry":-0.3},"ease":"out"},
+        {"t":0.6,"pose":{"ry":-0.36,"tF":60,"kF":-80,"tB":30,"kB":-70,"aF":100,"aB":90,"torso":8},"ease":"out"},
+        {"t":0.82,"pose":{"ry":-0.02,"tF":30,"kF":-40,"tB":15,"kB":-30,"aF":40,"aB":30,"torso":15},"ease":"in"},
+        {"t":0.92,"pose":{"torso":25,"tF":70,"kF":-120,"tB":30,"kB":-100,"aF":40,"eF":70,"aB":30,"eB":80},"ease":"out"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "backflip": {
+      "desc": "Standing backflip. Moves nothing; combine with a move to travel.",
+      "category": "movement", "dur": 1.1, "mask": "full",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.2,"pose":{"torso":15,"tF":60,"kF":-100,"tB":40,"kB":-90,"aF":-20,"eF":30,"aB":-30},"ease":"inOut"},
+        {"t":0.42,"pose":{"rot":-120,"ry":-0.4,"torso":10,"tF":95,"kF":-130,"tB":85,"kB":-130,"aF":60,"eF":90,"aB":50,"eB":90},"ease":"out"},
+        {"t":0.7,"pose":{"rot":-300,"ry":-0.34,"torso":10,"tF":95,"kF":-130,"tB":85,"kB":-130,"aF":60,"eF":90,"aB":50,"eB":90}},
+        {"t":0.9,"pose":{"rot":-360,"ry":-0.02,"torso":20,"tF":55,"kF":-90,"tB":40,"kB":-80,"aF":30,"eF":60},"ease":"in"},
+        {"t":1,"pose":{"rot":0},"ease":"hold"}
+      ]
+    },
+    "stagger": {
+      "desc": "Dizzy sway back and forth.",
+      "category": "reaction", "dur": 1.4, "mask": "full", "face": "pain",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.2,"pose":{"torso":-12,"head":-10,"rot":-6,"rx":-0.05,"aF":-20,"eF":30,"aB":-30,"eB":20},"ease":"inOut"},
+        {"t":0.45,"pose":{"torso":18,"head":12,"rot":8,"rx":0.04,"aF":30,"eF":40,"aB":-10,"eB":30},"ease":"inOut"},
+        {"t":0.7,"pose":{"torso":-10,"head":-8,"rot":-5,"rx":-0.03},"ease":"inOut"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "surprised": {
+      "desc": "Flinch back in shock.",
+      "category": "acting", "dur": 0.9, "mask": "full", "face": "shocked", "dx": -15,
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.15,"pose":{"torso":-10,"head":-14,"aF":45,"eF":60,"aB":35,"eB":60,"rx":-0.04,"ry":-0.03,"tF":12,"kF":-8},"ease":"snap"},
+        {"t":0.7,"pose":{"torso":-6,"head":-8,"aF":40,"eF":55,"rx":-0.03},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "gesture": {
+      "desc": "Natural talking gesture with the front hand (upper body only; works while walking).",
+      "category": "acting", "dur": 1.3, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.3,"pose":{"aF":70,"eF":80,"torso":4},"ease":"inOut"},
+        {"t":0.62,"pose":{"aF":52,"eF":62,"head":3},"ease":"inOut"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "point": {
+      "desc": "Point forward with the front arm.",
+      "category": "acting", "dur": 1.2, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.22,"pose":{"aF":85,"eF":3,"torso":6,"head":-3,"wpn":0},"ease":"snap"},
+        {"t":0.8,"pose":{"aF":85,"eF":3,"torso":6,"head":-3},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "shrug": {
+      "desc": "Shrug with both arms out and a head tilt.",
+      "category": "acting", "dur": 1.1, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.25,"pose":{"aF":32,"eF":72,"aB":22,"eB":72,"head":9,"torso":-3},"ease":"out"},
+        {"t":0.75,"pose":{"aF":32,"eF":72,"aB":22,"eB":72,"head":9,"torso":-3},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "nod": {
+      "desc": "Nod yes.",
+      "category": "acting", "dur": 0.7, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.25,"pose":{"head":16,"torso":4},"ease":"inOut"},
+        {"t":0.5,"pose":{"head":-2},"ease":"inOut"},
+        {"t":0.75,"pose":{"head":12,"torso":3},"ease":"inOut"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "wave": {
+      "desc": "Wave hello with the front hand.",
+      "category": "acting", "dur": 1.6, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.18,"pose":{"aF":150,"eF":30},"ease":"out"},
+        {"t":0.34,"pose":{"aF":150,"eF":65}, "ease":"inOut"},
+        {"t":0.5,"pose":{"aF":150,"eF":25},"ease":"inOut"},
+        {"t":0.66,"pose":{"aF":150,"eF":65},"ease":"inOut"},
+        {"t":0.82,"pose":{"aF":150,"eF":30},"ease":"inOut"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "think": {
+      "desc": "Hand to chin, thinking.",
+      "category": "acting", "dur": 1.6, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.25,"pose":{"aF":48,"eF":125,"head":8,"torso":4,"aB":22,"eB":100},"ease":"inOut"},
+        {"t":0.8,"pose":{"aF":48,"eF":125,"head":10,"torso":4},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "laugh": {
+      "desc": "Throw head back and laugh, shoulders bouncing.",
+      "category": "acting", "dur": 1.5, "mask": "upper", "face": "laugh",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.15,"pose":{"torso":-10,"head":-14,"aF":30,"eF":70},"ease":"out"},
+        {"t":0.3,"pose":{"torso":-6,"head":-10,"aF":30,"eF":70},"ease":"inOut"},
+        {"t":0.45,"pose":{"torso":-11,"head":-15},"ease":"inOut"},
+        {"t":0.6,"pose":{"torso":-6,"head":-10},"ease":"inOut"},
+        {"t":0.75,"pose":{"torso":-10,"head":-14},"ease":"inOut"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "cheer": {
+      "desc": "Both arms up in triumph with a little hop.",
+      "category": "acting", "dur": 1.3, "mask": "full", "face": "happy",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.2,"pose":{"aF":160,"eF":10,"aB":150,"eB":12,"ry":-0.06,"torso":-4,"head":-8},"ease":"out"},
+        {"t":0.4,"pose":{"aF":165,"eF":8,"aB":155,"eB":10,"ry":0,"torso":-3},"ease":"in"},
+        {"t":0.6,"pose":{"aF":160,"eF":12,"aB":152,"eB":12,"ry":-0.05},"ease":"out"},
+        {"t":0.8,"pose":{"aF":165,"eF":8,"ry":0},"ease":"in"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "victory": {
+      "desc": "Raise the weapon (or fist) high and hold the pose.",
+      "category": "acting", "dur": 1.5, "mask": "upper", "face": "determined",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.3,"pose":{"aF":150,"eF":25,"wpn":-10,"torso":-5,"head":-8},"ease":"out"},
+        {"t":0.85,"pose":{"aF":150,"eF":25,"wpn":-10,"torso":-5,"head":-8},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "taunt": {
+      "desc": "Beckon the opponent to come on with the front hand.",
+      "category": "acting", "dur": 1.4, "mask": "upper", "face": "smirk",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.2,"pose":{"aF":70,"eF":50,"head":6,"torso":-3},"ease":"out"},
+        {"t":0.4,"pose":{"aF":70,"eF":105},"ease":"inOut"},
+        {"t":0.6,"pose":{"aF":70,"eF":50},"ease":"inOut"},
+        {"t":0.8,"pose":{"aF":70,"eF":105},"ease":"inOut"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "power_up": {
+      "desc": "Crouch and gather energy, then burst upright. Pair with fx (flash, shake, dust, speedlines).",
+      "category": "acting", "dur": 2.0, "mask": "full", "face": "determined",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.4,"pose":{"torso":24,"head":-6,"aF":-20,"eF":40,"aB":-30,"eB":40,"tF":65,"kF":-110,"tB":20,"kB":-100},"ease":"inOut"},
+        {"t":0.7,"pose":{"torso":26,"aF":-22,"eF":38,"tF":66,"kF":-112},"ease":"linear"},
+        {"t":0.82,"pose":{"torso":-8,"head":-14,"aF":50,"eF":100,"aB":40,"eB":100,"tF":22,"kF":-18,"tB":-14,"kB":-10,"ry":-0.03},"ease":"snap"},
+        {"t":1,"pose":{}}
+      ]
+    },
+    "bow": {
+      "desc": "Respectful bow.",
+      "category": "acting", "dur": 1.6, "mask": "upper",
+      "keys": [
+        {"t":0,"pose":{}},
+        {"t":0.35,"pose":{"torso":42,"head":12,"aF":10,"eF":10,"aB":-4},"ease":"inOut"},
+        {"t":0.65,"pose":{"torso":42,"head":12},"ease":"linear"},
+        {"t":1,"pose":{}}
+      ]
+    }
+  }
+}

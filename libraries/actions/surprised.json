@@ -1,0 +1,45 @@
+{
+ "desc": "Flinch back in shock.",
+ "category": "acting",
+ "dur": 0.9,
+ "mask": "full",
+ "face": "shocked",
+ "dx": -15,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.15,
+   "pose": {
+    "torso": -10,
+    "head": -14,
+    "aF": 45,
+    "eF": 60,
+    "aB": 35,
+    "eB": 60,
+    "rx": -0.04,
+    "ry": -0.03,
+    "tF": 12,
+    "kF": -8
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.7,
+   "pose": {
+    "torso": -6,
+    "head": -8,
+    "aF": 40,
+    "eF": 55,
+    "rx": -0.03
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

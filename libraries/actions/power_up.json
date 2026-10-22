@@ -1,0 +1,61 @@
+{
+ "desc": "Crouch and gather energy, then burst upright. Pair with fx (flash, shake, dust, speedlines).",
+ "category": "acting",
+ "dur": 2.0,
+ "mask": "full",
+ "face": "determined",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.4,
+   "pose": {
+    "torso": 24,
+    "head": -6,
+    "aF": -20,
+    "eF": 40,
+    "aB": -30,
+    "eB": 40,
+    "tF": 65,
+    "kF": -110,
+    "tB": 20,
+    "kB": -100
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.7,
+   "pose": {
+    "torso": 26,
+    "aF": -22,
+    "eF": 38,
+    "tF": 66,
+    "kF": -112
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 0.82,
+   "pose": {
+    "torso": -8,
+    "head": -14,
+    "aF": 50,
+    "eF": 100,
+    "aB": 40,
+    "eB": 100,
+    "tF": 22,
+    "kF": -18,
+    "tB": -14,
+    "kB": -10,
+    "ry": -0.03
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

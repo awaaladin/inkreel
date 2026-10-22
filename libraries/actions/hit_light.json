@@ -1,0 +1,34 @@
+{
+ "desc": "Small flinch from a light hit. Pushed back ~25px.",
+ "category": "reaction",
+ "dur": 0.5,
+ "mask": "full",
+ "face": "pain",
+ "dx": -25,
+ "dxSpan": 0.4,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.16,
+   "pose": {
+    "torso": -16,
+    "head": -18,
+    "aF": -5,
+    "eF": 50,
+    "aB": -20,
+    "eB": 40,
+    "rx": -0.06,
+    "tF": 18,
+    "kF": -12
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

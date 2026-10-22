@@ -1,0 +1,57 @@
+{
+ "desc": "Exhausted slow fall to the ground (ends in 'down' stance). Good for defeat.",
+ "category": "reaction",
+ "dur": 1.8,
+ "mask": "full",
+ "face": "pain",
+ "endStance": "down",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.35,
+   "pose": {
+    "torso": 20,
+    "head": 18,
+    "aF": 10,
+    "eF": 10,
+    "aB": -5,
+    "eB": 8,
+    "tF": 70,
+    "kF": -110,
+    "tB": 10,
+    "kB": -90
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.6,
+   "pose": {
+    "torso": 10,
+    "rot": -20,
+    "tF": 80,
+    "kF": -100,
+    "tB": -10,
+    "kB": -130,
+    "ry": 0
+   },
+   "ease": "in"
+  },
+  {
+   "t": 0.85,
+   "pose": {
+    "rot": -80,
+    "torso": 0,
+    "ry": -0.03
+   },
+   "ease": "in"
+  },
+  {
+   "t": 1,
+   "pose": "down",
+   "ease": "out"
+  }
+ ]
+}

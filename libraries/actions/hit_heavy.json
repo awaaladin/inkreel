@@ -1,0 +1,51 @@
+{
+ "desc": "Big stagger from a strong hit. Pushed back ~90px.",
+ "category": "reaction",
+ "dur": 0.85,
+ "mask": "full",
+ "face": "pain",
+ "dx": -90,
+ "dxSpan": 0.55,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.16,
+   "pose": {
+    "torso": -32,
+    "head": -30,
+    "rot": -10,
+    "aF": -45,
+    "eF": 40,
+    "aB": -60,
+    "eB": 30,
+    "tF": 30,
+    "kF": -20,
+    "tB": -18,
+    "kB": -30,
+    "rx": -0.14
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "torso": -18,
+    "head": -16,
+    "rot": -5,
+    "aF": -20,
+    "eF": 40,
+    "aB": -30,
+    "eB": 40,
+    "rx": -0.12
+   },
+   "ease": "out"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

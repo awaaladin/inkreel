@@ -1,0 +1,55 @@
+{
+ "desc": "Dizzy sway back and forth.",
+ "category": "reaction",
+ "dur": 1.4,
+ "mask": "full",
+ "face": "pain",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.2,
+   "pose": {
+    "torso": -12,
+    "head": -10,
+    "rot": -6,
+    "rx": -0.05,
+    "aF": -20,
+    "eF": 30,
+    "aB": -30,
+    "eB": 20
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.45,
+   "pose": {
+    "torso": 18,
+    "head": 12,
+    "rot": 8,
+    "rx": 0.04,
+    "aF": 30,
+    "eF": 40,
+    "aB": -10,
+    "eB": 30
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.7,
+   "pose": {
+    "torso": -10,
+    "head": -8,
+    "rot": -5,
+    "rx": -0.03
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

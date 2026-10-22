@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inkreel preview</title>
+<link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="mark">&#9998;</span> INKREEL <em id="ptitle"></em></div>
+  <div class="status" id="status" data-on="0"><i></i><span>connecting</span></div>
+</header>
+<main>
+  <section class="stagecol">
+    <div class="stage" id="stage">
+      <canvas id="cv" width="1920" height="1080"></canvas>
+      <div class="empty" id="empty"><b>Nothing drawn yet.</b><span>Type a request in the terminal, or run <code>/demo</code>.</span></div>
+      <div class="busy" id="busy"><i></i><i></i><i></i> director is drawing</div>
+    </div>
+    <div class="tabs" id="scenetabs"></div>
+    <div class="transport">
+      <button id="bPlay" class="btn primary" title="Space">Play</button>
+      <button id="bLoop" class="btn toggle" aria-pressed="false" title="L">Loop</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="timeline">
+      <span id="clock">0.0 / 0.0</span>
+      <select id="speed" aria-label="speed"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option></select>
+      <button id="bRec" class="btn rec" title="record the preview to a video file">Record</button>
+    </div>
+  </section>
+  <aside class="side">
+    <nav class="stabs" id="stabs">
+      <button data-p="shots" class="on">Shots</button><button data-p="cast">Cast</button><button data-p="notes">Research</button><button data-p="log">Log</button>
+    </nav>
+    <div class="panel on" id="p-shots"></div>
+    <div class="panel" id="p-cast"></div>
+    <div class="panel" id="p-notes"></div>
+    <div class="panel" id="p-log"></div>
+  </aside>
+</main>
+<script src="/web/core.js"></script>
+<script src="/web/draw.js"></script>
+<script src="/web/world.js"></script>
+<script src="/web/engine.js"></script>
+<script src="/web/app.js"></script>
+</body>
+</html>

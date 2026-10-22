@@ -1,0 +1,40 @@
+{
+ "desc": "Shrug with both arms out and a head tilt.",
+ "category": "acting",
+ "dur": 1.1,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.25,
+   "pose": {
+    "aF": 32,
+    "eF": 72,
+    "aB": 22,
+    "eB": 72,
+    "head": 9,
+    "torso": -3
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.75,
+   "pose": {
+    "aF": 32,
+    "eF": 72,
+    "aB": 22,
+    "eB": 72,
+    "head": 9,
+    "torso": -3
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

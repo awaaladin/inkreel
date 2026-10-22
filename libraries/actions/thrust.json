@@ -1,0 +1,63 @@
+{
+ "desc": "Lunging stab straight ahead with weapon (needs a weapon). Hits at 50%.",
+ "category": "attack",
+ "dur": 0.75,
+ "mask": "full",
+ "trail": "weapon",
+ "hit": 0.5,
+ "reach": 230,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.28,
+   "pose": {
+    "torso": 2,
+    "aF": 30,
+    "eF": 100,
+    "aB": 40,
+    "eB": 100,
+    "tF": 32,
+    "kF": -45,
+    "tB": -26,
+    "wpn": -30,
+    "rx": -0.04
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "torso": 28,
+    "head": -6,
+    "aF": 88,
+    "eF": 4,
+    "aB": -10,
+    "eB": 60,
+    "tF": 72,
+    "kF": -30,
+    "tB": -38,
+    "kB": -6,
+    "wpn": 0,
+    "rx": 0.18
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.7,
+   "pose": {
+    "torso": 26,
+    "aF": 86,
+    "eF": 6,
+    "rx": 0.17
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

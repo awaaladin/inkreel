@@ -1,0 +1,74 @@
+{
+ "desc": "Blasted off their feet and lands flat on their back (ends in 'down' stance). Slides ~170px back.",
+ "category": "reaction",
+ "dur": 1.25,
+ "mask": "full",
+ "face": "pain",
+ "dx": -170,
+ "dxSpan": 0.7,
+ "endStance": "down",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.16,
+   "pose": {
+    "torso": -28,
+    "head": -26,
+    "rot": -25,
+    "rx": -0.12,
+    "ry": -0.05,
+    "aF": -60,
+    "eF": 30,
+    "aB": -70,
+    "eB": 30,
+    "tF": 40,
+    "kF": -30,
+    "tB": 20,
+    "kB": -40
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "torso": -12,
+    "rot": -68,
+    "ry": -0.16,
+    "aF": -30,
+    "eF": 30,
+    "aB": -40,
+    "eB": 30,
+    "tF": 30,
+    "kF": -30,
+    "tB": 10,
+    "kB": -40
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.82,
+   "pose": {
+    "torso": 0,
+    "rot": -90,
+    "ry": -0.02,
+    "aF": 20,
+    "eF": 20,
+    "aB": -20,
+    "eB": 20,
+    "tF": 14,
+    "kF": -14,
+    "tB": 6,
+    "kB": -20
+   },
+   "ease": "in"
+  },
+  {
+   "t": 1,
+   "pose": "down",
+   "ease": "out"
+  }
+ ]
+}

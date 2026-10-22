@@ -1,0 +1,39 @@
+{
+ "desc": "Raise the weapon (or fist) high and hold the pose.",
+ "category": "acting",
+ "dur": 1.5,
+ "mask": "upper",
+ "face": "determined",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.3,
+   "pose": {
+    "aF": 150,
+    "eF": 25,
+    "wpn": -10,
+    "torso": -5,
+    "head": -8
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.85,
+   "pose": {
+    "aF": 150,
+    "eF": 25,
+    "wpn": -10,
+    "torso": -5,
+    "head": -8
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

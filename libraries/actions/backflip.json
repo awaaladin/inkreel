@@ -1,0 +1,81 @@
+{
+ "desc": "Standing backflip. Moves nothing; combine with a move to travel.",
+ "category": "movement",
+ "dur": 1.1,
+ "mask": "full",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.2,
+   "pose": {
+    "torso": 15,
+    "tF": 60,
+    "kF": -100,
+    "tB": 40,
+    "kB": -90,
+    "aF": -20,
+    "eF": 30,
+    "aB": -30
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.42,
+   "pose": {
+    "rot": -120,
+    "ry": -0.4,
+    "torso": 10,
+    "tF": 95,
+    "kF": -130,
+    "tB": 85,
+    "kB": -130,
+    "aF": 60,
+    "eF": 90,
+    "aB": 50,
+    "eB": 90
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.7,
+   "pose": {
+    "rot": -300,
+    "ry": -0.34,
+    "torso": 10,
+    "tF": 95,
+    "kF": -130,
+    "tB": 85,
+    "kB": -130,
+    "aF": 60,
+    "eF": 90,
+    "aB": 50,
+    "eB": 90
+   }
+  },
+  {
+   "t": 0.9,
+   "pose": {
+    "rot": -360,
+    "ry": -0.02,
+    "torso": 20,
+    "tF": 55,
+    "kF": -90,
+    "tB": 40,
+    "kB": -80,
+    "aF": 30,
+    "eF": 60
+   },
+   "ease": "in"
+  },
+  {
+   "t": 1,
+   "pose": {
+    "rot": 0
+   },
+   "ease": "hold"
+  }
+ ]
+}

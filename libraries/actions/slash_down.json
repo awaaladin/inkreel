@@ -1,0 +1,65 @@
+{
+ "desc": "Overhead chop with the held weapon (needs a weapon). Hits at 50%.",
+ "category": "attack",
+ "dur": 0.85,
+ "mask": "full",
+ "trail": "weapon",
+ "hit": 0.5,
+ "reach": 190,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.32,
+   "pose": {
+    "torso": -12,
+    "head": -6,
+    "aF": 165,
+    "eF": 25,
+    "aB": 150,
+    "eB": 40,
+    "tF": 28,
+    "kF": -30,
+    "tB": -30,
+    "kB": -20,
+    "wpn": -10,
+    "rx": -0.04
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "torso": 30,
+    "head": -4,
+    "aF": 62,
+    "eF": 6,
+    "aB": 60,
+    "eB": 60,
+    "tF": 55,
+    "kF": -40,
+    "tB": -35,
+    "kB": -12,
+    "wpn": 0,
+    "rx": 0.14
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.72,
+   "pose": {
+    "torso": 28,
+    "aF": 58,
+    "eF": 8,
+    "rx": 0.13
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

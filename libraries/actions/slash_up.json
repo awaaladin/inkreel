@@ -1,0 +1,65 @@
+{
+ "desc": "Rising diagonal slash from low-behind to high-forward (needs a weapon). Hits at 50%.",
+ "category": "attack",
+ "dur": 0.8,
+ "mask": "full",
+ "trail": "weapon",
+ "hit": 0.5,
+ "reach": 190,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.3,
+   "pose": {
+    "torso": 14,
+    "head": -2,
+    "aF": -38,
+    "eF": 20,
+    "aB": 30,
+    "eB": 100,
+    "tF": 45,
+    "kF": -45,
+    "tB": -30,
+    "kB": -20,
+    "wpn": -20,
+    "rx": -0.03
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "torso": -6,
+    "head": -6,
+    "aF": 100,
+    "eF": 28,
+    "aB": 50,
+    "eB": 100,
+    "tF": 58,
+    "kF": -40,
+    "tB": -34,
+    "kB": -14,
+    "wpn": 0,
+    "rx": 0.13
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.72,
+   "pose": {
+    "torso": -4,
+    "aF": 105,
+    "eF": 30,
+    "rx": 0.12
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

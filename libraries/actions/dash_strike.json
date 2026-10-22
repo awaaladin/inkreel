@@ -1,0 +1,66 @@
+{
+ "desc": "Fast gliding dash forward ending in a thrust. Moves the character ~260px forward, so start it ~480px away. Hits at 50%.",
+ "category": "attack",
+ "dur": 0.75,
+ "mask": "full",
+ "trail": "weapon",
+ "hit": 0.5,
+ "reach": 230,
+ "dx": 260,
+ "dxSpan": 0.5,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.2,
+   "pose": {
+    "torso": 18,
+    "aF": 40,
+    "eF": 90,
+    "aB": -30,
+    "eB": 40,
+    "tF": 50,
+    "kF": -60,
+    "tB": -40,
+    "kB": -50,
+    "wpn": -20,
+    "rx": -0.02
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.45,
+   "pose": {
+    "torso": 34,
+    "head": -8,
+    "aF": 88,
+    "eF": 4,
+    "aB": -20,
+    "eB": 50,
+    "tF": 75,
+    "kF": -20,
+    "tB": -45,
+    "kB": -8,
+    "wpn": 0,
+    "rx": 0.1
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.75,
+   "pose": {
+    "torso": 28,
+    "aF": 86,
+    "eF": 6,
+    "rx": 0.08
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}
