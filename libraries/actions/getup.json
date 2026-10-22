@@ -1,0 +1,52 @@
+{
+ "desc": "Push up from lying down to standing (use after hit_knockdown / collapse). Ends in idle.",
+ "category": "recovery",
+ "dur": 1.4,
+ "mask": "full",
+ "endStance": "idle",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.35,
+   "pose": {
+    "rot": -55,
+    "torso": 35,
+    "head": 10,
+    "aF": 60,
+    "eF": 15,
+    "aB": 45,
+    "eB": 20,
+    "tF": 75,
+    "kF": -110,
+    "tB": 18,
+    "kB": -100
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.7,
+   "pose": {
+    "rot": -8,
+    "torso": 26,
+    "head": 0,
+    "aF": 30,
+    "eF": 60,
+    "aB": 25,
+    "eB": 70,
+    "tF": 60,
+    "kF": -95,
+    "tB": 10,
+    "kB": -70
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": "idle",
+   "ease": "inOut"
+  }
+ ]
+}

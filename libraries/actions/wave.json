@@ -1,0 +1,56 @@
+{
+ "desc": "Wave hello with the front hand.",
+ "category": "acting",
+ "dur": 1.6,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.18,
+   "pose": {
+    "aF": 150,
+    "eF": 30
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.34,
+   "pose": {
+    "aF": 150,
+    "eF": 65
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "aF": 150,
+    "eF": 25
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.66,
+   "pose": {
+    "aF": 150,
+    "eF": 65
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.82,
+   "pose": {
+    "aF": 150,
+    "eF": 30
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

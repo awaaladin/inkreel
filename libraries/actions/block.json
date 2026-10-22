@@ -1,0 +1,43 @@
+{
+ "desc": "Brace and guard against an incoming hit. Use 'strike' with block:true to pair it with an attack.",
+ "category": "defense",
+ "dur": 0.7,
+ "mask": "full",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.18,
+   "pose": {
+    "torso": -8,
+    "head": -4,
+    "aF": 70,
+    "eF": 118,
+    "aB": 62,
+    "eB": 125,
+    "tF": 38,
+    "kF": -45,
+    "tB": -28,
+    "rx": -0.04,
+    "wpn": -60
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.75,
+   "pose": {
+    "torso": -6,
+    "aF": 68,
+    "eF": 120,
+    "rx": -0.03
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

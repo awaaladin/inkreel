@@ -1,0 +1,67 @@
+{
+ "desc": "Fast straight punch with the front fist. Lunges slightly forward. Hits at 46% of duration.",
+ "category": "attack",
+ "dur": 0.65,
+ "mask": "full",
+ "trail": "hand",
+ "hit": 0.46,
+ "reach": 130,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.28,
+   "pose": {
+    "torso": -6,
+    "aF": 25,
+    "eF": 120,
+    "aB": 45,
+    "eB": 110,
+    "tF": 30,
+    "kF": -45,
+    "tB": -24,
+    "rx": -0.03
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.46,
+   "pose": {
+    "torso": 24,
+    "head": -6,
+    "aF": 88,
+    "eF": 4,
+    "aB": 20,
+    "eB": 125,
+    "tF": 48,
+    "kF": -50,
+    "tB": -34,
+    "kB": -18,
+    "rx": 0.1
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.66,
+   "pose": {
+    "torso": 20,
+    "aF": 86,
+    "eF": 6,
+    "aB": 25,
+    "eB": 120,
+    "tF": 46,
+    "kF": -48,
+    "tB": -32,
+    "kB": -18,
+    "rx": 0.1
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

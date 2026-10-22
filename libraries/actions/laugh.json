@@ -1,0 +1,61 @@
+{
+ "desc": "Throw head back and laugh, shoulders bouncing.",
+ "category": "acting",
+ "dur": 1.5,
+ "mask": "upper",
+ "face": "laugh",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.15,
+   "pose": {
+    "torso": -10,
+    "head": -14,
+    "aF": 30,
+    "eF": 70
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.3,
+   "pose": {
+    "torso": -6,
+    "head": -10,
+    "aF": 30,
+    "eF": 70
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.45,
+   "pose": {
+    "torso": -11,
+    "head": -15
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.6,
+   "pose": {
+    "torso": -6,
+    "head": -10
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.75,
+   "pose": {
+    "torso": -10,
+    "head": -14
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

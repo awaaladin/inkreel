@@ -1,0 +1,35 @@
+{
+ "desc": "Respectful bow.",
+ "category": "acting",
+ "dur": 1.6,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.35,
+   "pose": {
+    "torso": 42,
+    "head": 12,
+    "aF": 10,
+    "eF": 10,
+    "aB": -4
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.65,
+   "pose": {
+    "torso": 42,
+    "head": 12
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

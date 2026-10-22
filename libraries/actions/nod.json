@@ -1,0 +1,39 @@
+{
+ "desc": "Nod yes.",
+ "category": "acting",
+ "dur": 0.7,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.25,
+   "pose": {
+    "head": 16,
+    "torso": 4
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.5,
+   "pose": {
+    "head": -2
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.75,
+   "pose": {
+    "head": 12,
+    "torso": 3
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

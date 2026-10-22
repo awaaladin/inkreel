@@ -1,0 +1,74 @@
+{
+ "neutral": {
+  "brow": 0,
+  "browY": 0,
+  "eye": 1,
+  "mouth": "flat"
+ },
+ "happy": {
+  "brow": -0.3,
+  "browY": 0.05,
+  "eye": 0.85,
+  "mouth": "smile"
+ },
+ "angry": {
+  "brow": 1,
+  "browY": -0.05,
+  "eye": 0.8,
+  "mouth": "frown"
+ },
+ "sad": {
+  "brow": -1,
+  "browY": 0,
+  "eye": 0.9,
+  "mouth": "frown"
+ },
+ "shocked": {
+  "brow": -0.4,
+  "browY": 0.35,
+  "eye": 1.35,
+  "mouth": "o"
+ },
+ "smirk": {
+  "brow": 0.5,
+  "browY": 0,
+  "eye": 0.75,
+  "mouth": "smirk"
+ },
+ "pain": {
+  "brow": 0.8,
+  "browY": -0.1,
+  "eye": 0.05,
+  "mouth": "grit"
+ },
+ "determined": {
+  "brow": 0.7,
+  "browY": -0.05,
+  "eye": 0.85,
+  "mouth": "flat"
+ },
+ "scared": {
+  "brow": -0.9,
+  "browY": 0.25,
+  "eye": 1.25,
+  "mouth": "wobble"
+ },
+ "tired": {
+  "brow": -0.4,
+  "browY": -0.1,
+  "eye": 0.4,
+  "mouth": "flat"
+ },
+ "laugh": {
+  "brow": -0.2,
+  "browY": 0.1,
+  "eye": 0.15,
+  "mouth": "laugh"
+ },
+ "shout": {
+  "brow": 1,
+  "browY": 0,
+  "eye": 0.8,
+  "mouth": "shout"
+ }
+}

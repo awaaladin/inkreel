@@ -1,0 +1,51 @@
+{
+ "desc": "Beckon the opponent to come on with the front hand.",
+ "category": "acting",
+ "dur": 1.4,
+ "mask": "upper",
+ "face": "smirk",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.2,
+   "pose": {
+    "aF": 70,
+    "eF": 50,
+    "head": 6,
+    "torso": -3
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.4,
+   "pose": {
+    "aF": 70,
+    "eF": 105
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.6,
+   "pose": {
+    "aF": 70,
+    "eF": 50
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.8,
+   "pose": {
+    "aF": 70,
+    "eF": 105
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

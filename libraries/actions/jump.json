@@ -1,0 +1,89 @@
+{
+ "desc": "Crouch, leap straight up, tuck, land. Combine with a move for a jump across.",
+ "category": "movement",
+ "dur": 1.0,
+ "mask": "full",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.2,
+   "pose": {
+    "torso": 20,
+    "aF": -40,
+    "eF": 30,
+    "aB": -50,
+    "tF": 60,
+    "kF": -100,
+    "tB": 40,
+    "kB": -90
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.4,
+   "pose": {
+    "torso": 5,
+    "aF": 140,
+    "eF": 20,
+    "aB": 130,
+    "eB": 20,
+    "tF": 20,
+    "kF": -10,
+    "tB": -10,
+    "kB": -10,
+    "ry": -0.3
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.6,
+   "pose": {
+    "ry": -0.36,
+    "tF": 60,
+    "kF": -80,
+    "tB": 30,
+    "kB": -70,
+    "aF": 100,
+    "aB": 90,
+    "torso": 8
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.82,
+   "pose": {
+    "ry": -0.02,
+    "tF": 30,
+    "kF": -40,
+    "tB": 15,
+    "kB": -30,
+    "aF": 40,
+    "aB": 30,
+    "torso": 15
+   },
+   "ease": "in"
+  },
+  {
+   "t": 0.92,
+   "pose": {
+    "torso": 25,
+    "tF": 70,
+    "kF": -120,
+    "tB": 30,
+    "kB": -100,
+    "aF": 40,
+    "eF": 70,
+    "aB": 30,
+    "eB": 80
+   },
+   "ease": "out"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

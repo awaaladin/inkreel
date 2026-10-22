@@ -1,0 +1,63 @@
+{
+ "desc": "Front kick: knee chamber then snap. Hits at 45%.",
+ "category": "attack",
+ "dur": 0.85,
+ "mask": "full",
+ "trail": "foot",
+ "hit": 0.45,
+ "reach": 150,
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.3,
+   "pose": {
+    "torso": -4,
+    "tF": 70,
+    "kF": -115,
+    "aF": 30,
+    "eF": 100,
+    "aB": -10,
+    "eB": 80,
+    "tB": -8,
+    "kB": -8,
+    "rx": -0.02
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.45,
+   "pose": {
+    "torso": -18,
+    "head": -4,
+    "tF": 98,
+    "kF": -4,
+    "aF": -10,
+    "eF": 60,
+    "aB": 60,
+    "eB": 60,
+    "tB": -6,
+    "kB": -6,
+    "rx": 0.04
+   },
+   "ease": "snap"
+  },
+  {
+   "t": 0.68,
+   "pose": {
+    "torso": -16,
+    "tF": 95,
+    "kF": -8,
+    "aF": -8,
+    "aB": 58
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

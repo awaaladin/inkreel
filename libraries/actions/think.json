@@ -1,0 +1,38 @@
+{
+ "desc": "Hand to chin, thinking.",
+ "category": "acting",
+ "dur": 1.6,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.25,
+   "pose": {
+    "aF": 48,
+    "eF": 125,
+    "head": 8,
+    "torso": 4,
+    "aB": 22,
+    "eB": 100
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.8,
+   "pose": {
+    "aF": 48,
+    "eF": 125,
+    "head": 10,
+    "torso": 4
+   },
+   "ease": "linear"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

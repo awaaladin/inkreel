@@ -1,0 +1,62 @@
+{
+ "desc": "Both arms up in triumph with a little hop.",
+ "category": "acting",
+ "dur": 1.3,
+ "mask": "full",
+ "face": "happy",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.2,
+   "pose": {
+    "aF": 160,
+    "eF": 10,
+    "aB": 150,
+    "eB": 12,
+    "ry": -0.06,
+    "torso": -4,
+    "head": -8
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.4,
+   "pose": {
+    "aF": 165,
+    "eF": 8,
+    "aB": 155,
+    "eB": 10,
+    "ry": 0,
+    "torso": -3
+   },
+   "ease": "in"
+  },
+  {
+   "t": 0.6,
+   "pose": {
+    "aF": 160,
+    "eF": 12,
+    "aB": 152,
+    "eB": 12,
+    "ry": -0.05
+   },
+   "ease": "out"
+  },
+  {
+   "t": 0.8,
+   "pose": {
+    "aF": 165,
+    "eF": 8,
+    "ry": 0
+   },
+   "ease": "in"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}

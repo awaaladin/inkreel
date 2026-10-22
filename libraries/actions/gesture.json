@@ -1,0 +1,34 @@
+{
+ "desc": "Natural talking gesture with the front hand (upper body only; works while walking).",
+ "category": "acting",
+ "dur": 1.3,
+ "mask": "upper",
+ "keys": [
+  {
+   "t": 0,
+   "pose": {}
+  },
+  {
+   "t": 0.3,
+   "pose": {
+    "aF": 70,
+    "eF": 80,
+    "torso": 4
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 0.62,
+   "pose": {
+    "aF": 52,
+    "eF": 62,
+    "head": 3
+   },
+   "ease": "inOut"
+  },
+  {
+   "t": 1,
+   "pose": {}
+  }
+ ]
+}
