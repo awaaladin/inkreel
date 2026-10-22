@@ -8,3 +8,8 @@ workspaces/
 dist/
 target/
 *.tmp
+
+# markdown stays local except usage docs
+*.md
+!README.md
+!docs/USAGE.md
