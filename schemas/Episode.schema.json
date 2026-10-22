@@ -1,0 +1,60 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "id": {
+   "title": "Id",
+   "type": "string"
+  },
+  "title": {
+   "title": "Title",
+   "type": "string"
+  },
+  "number": {
+   "default": 1,
+   "title": "Number",
+   "type": "integer"
+  },
+  "scenes": {
+   "description": "ordered scene ids",
+   "items": {
+    "type": "string"
+   },
+   "title": "Scenes",
+   "type": "array"
+  },
+  "title_cards": {
+   "items": {
+    "additionalProperties": true,
+    "type": "object"
+   },
+   "title": "Title Cards",
+   "type": "array"
+  },
+  "music_beds": {
+   "items": {
+    "additionalProperties": true,
+    "type": "object"
+   },
+   "title": "Music Beds",
+   "type": "array"
+  },
+  "credits": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Credits",
+   "type": "array"
+  },
+  "synopsis": {
+   "default": "",
+   "title": "Synopsis",
+   "type": "string"
+  }
+ },
+ "required": [
+  "id",
+  "title"
+ ],
+ "title": "Episode",
+ "type": "object"
+}

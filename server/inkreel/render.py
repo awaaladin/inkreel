@@ -122,7 +122,7 @@ class NodeBackend:
 
     def still(self, bundle: dict, t: float, out: Path, scale: float = 1.0) -> Path:
         node = self._ensure()
-        out = Path(out)
+        out = Path(out).resolve()
         out.parent.mkdir(parents=True, exist_ok=True)
         bpath = self._write_bundle(bundle)
         try:
@@ -140,7 +140,7 @@ class NodeBackend:
         ff = find_ffmpeg()
         if not ff:
             raise RenderError("ffmpeg not found", "install it: winget install Gyan.FFmpeg (Windows), brew install ffmpeg (macOS), apt install ffmpeg (Linux)")
-        out = Path(out)
+        out = Path(out).resolve()
         out.parent.mkdir(parents=True, exist_ok=True)
         bpath = self._write_bundle(bundle)
         cmd = [node, str(ENGINE_JS / "run.js"), "video", bpath, str(out), "--scale", str(scale), "--ffmpeg", ff, "--t0", str(t0)]

@@ -167,11 +167,7 @@ class Store:
         with self.turn(sid, f"create series {sid}", "user") as tx:
             tx.write(f"series/{sid}/series.json", M.Series(id=sid, title=title, logline=logline).model_dump())
             tx.write(f"series/{sid}/style.json", M.Style().model_dump())
-            tx.write(f"series/{sid}/bible.md", {"_text": f"# {title} - series bible
-
-## Look
-Hand-drawn, boiling ink lines, paper grain.
-"})
+            tx.write(f"series/{sid}/bible.md", {"_text": f"# {title} - series bible\n\n## Look\nHand-drawn, boiling ink lines, paper grain.\n"})
             ws = tx.read("workspace.json")
             ws["series"].append(sid)
             tx.touch("workspace.json")

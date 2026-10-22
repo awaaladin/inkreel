@@ -1,0 +1,1121 @@
+{
+ "$defs": {
+  "ActEvent": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "action": {
+     "default": "",
+     "title": "Action",
+     "type": "string"
+    },
+    "dur": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dur"
+    },
+    "intensity": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Intensity"
+    },
+    "dx": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dx"
+    },
+    "target": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Target"
+    }
+   },
+   "title": "ActEvent",
+   "type": "object"
+  },
+  "ActionDef": {
+   "additionalProperties": true,
+   "properties": {
+    "desc": {
+     "default": "",
+     "title": "Desc",
+     "type": "string"
+    },
+    "category": {
+     "default": "custom",
+     "title": "Category",
+     "type": "string"
+    },
+    "dur": {
+     "default": 0.8,
+     "maximum": 60,
+     "minimum": 0.1,
+     "title": "Dur",
+     "type": "number"
+    },
+    "mask": {
+     "default": "full",
+     "enum": [
+      "full",
+      "upper"
+     ],
+     "title": "Mask",
+     "type": "string"
+    },
+    "keys": {
+     "items": {
+      "$ref": "#/$defs/Key"
+     },
+     "title": "Keys",
+     "type": "array"
+    },
+    "trail": {
+     "anyOf": [
+      {
+       "enum": [
+        "weapon",
+        "hand",
+        "foot"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Trail"
+    },
+    "face": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Face"
+    },
+    "endStance": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Endstance"
+    },
+    "dx": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dx"
+    },
+    "dxSpan": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dxspan"
+    },
+    "hit": {
+     "anyOf": [
+      {
+       "maximum": 0.95,
+       "minimum": 0.1,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Hit"
+    },
+    "reach": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Reach"
+    },
+    "tags": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Tags",
+     "type": "array"
+    }
+   },
+   "required": [
+    "keys"
+   ],
+   "title": "ActionDef",
+   "type": "object"
+  },
+  "Actor": {
+   "additionalProperties": false,
+   "properties": {
+    "x": {
+     "default": 0,
+     "title": "X",
+     "type": "number"
+    },
+    "y": {
+     "default": 0,
+     "title": "Y",
+     "type": "number"
+    },
+    "facing": {
+     "default": 1,
+     "title": "Facing",
+     "type": "integer"
+    },
+    "moves": {
+     "items": {
+      "$ref": "#/$defs/Move"
+     },
+     "title": "Moves",
+     "type": "array"
+    },
+    "actions": {
+     "items": {
+      "$ref": "#/$defs/ActEvent"
+     },
+     "title": "Actions",
+     "type": "array"
+    },
+    "stances": {
+     "items": {
+      "$ref": "#/$defs/StanceEvent"
+     },
+     "title": "Stances",
+     "type": "array"
+    },
+    "emotes": {
+     "items": {
+      "$ref": "#/$defs/Emote"
+     },
+     "title": "Emotes",
+     "type": "array"
+    },
+    "says": {
+     "items": {
+      "$ref": "#/$defs/Say"
+     },
+     "title": "Says",
+     "type": "array"
+    },
+    "faces": {
+     "items": {
+      "$ref": "#/$defs/Face"
+     },
+     "title": "Faces",
+     "type": "array"
+    }
+   },
+   "title": "Actor",
+   "type": "object"
+  },
+  "AudioCue": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "kind": {
+     "default": "sfx",
+     "enum": [
+      "sfx",
+      "music",
+      "ambience",
+      "dialogue"
+     ],
+     "title": "Kind",
+     "type": "string"
+    },
+    "asset": {
+     "default": "",
+     "title": "Asset",
+     "type": "string"
+    },
+    "dur": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dur"
+    },
+    "gain_db": {
+     "default": 0.0,
+     "title": "Gain Db",
+     "type": "number"
+    }
+   },
+   "title": "AudioCue",
+   "type": "object"
+  },
+  "Background": {
+   "additionalProperties": true,
+   "properties": {
+    "preset": {
+     "default": "beach",
+     "title": "Preset",
+     "type": "string"
+    },
+    "time": {
+     "default": "day",
+     "title": "Time",
+     "type": "string"
+    },
+    "weather": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Weather"
+    },
+    "palette": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "string"
+       },
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Palette"
+    },
+    "image": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "imported background asset (Phase 5)",
+     "title": "Image"
+    }
+   },
+   "title": "Background",
+   "type": "object"
+  },
+  "CamEvent": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "kind": {
+     "default": "set",
+     "title": "Kind",
+     "type": "string"
+    }
+   },
+   "title": "CamEvent",
+   "type": "object"
+  },
+  "Caption": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "text": {
+     "default": "",
+     "title": "Text",
+     "type": "string"
+    },
+    "dur": {
+     "default": 2.0,
+     "title": "Dur",
+     "type": "number"
+    },
+    "style": {
+     "default": "narration",
+     "title": "Style",
+     "type": "string"
+    }
+   },
+   "title": "Caption",
+   "type": "object"
+  },
+  "Emote": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "emotion": {
+     "default": "neutral",
+     "title": "Emotion",
+     "type": "string"
+    }
+   },
+   "title": "Emote",
+   "type": "object"
+  },
+  "Face": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "dir": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dir"
+    },
+    "target": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Target"
+    }
+   },
+   "title": "Face",
+   "type": "object"
+  },
+  "FxEvent": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "kind": {
+     "default": "impact",
+     "title": "Kind",
+     "type": "string"
+    },
+    "dur": {
+     "default": 0.6,
+     "title": "Dur",
+     "type": "number"
+    }
+   },
+   "title": "FxEvent",
+   "type": "object"
+  },
+  "Key": {
+   "additionalProperties": false,
+   "properties": {
+    "t": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "T",
+     "type": "number"
+    },
+    "pose": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "description": "joint angles, or a stance name",
+     "title": "Pose"
+    },
+    "ease": {
+     "default": "smooth",
+     "title": "Ease",
+     "type": "string"
+    }
+   },
+   "required": [
+    "t"
+   ],
+   "title": "Key",
+   "type": "object"
+  },
+  "Move": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "x": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "X"
+    },
+    "y": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Y"
+    },
+    "dur": {
+     "default": 1.0,
+     "title": "Dur",
+     "type": "number"
+    },
+    "style": {
+     "default": "walk",
+     "title": "Style",
+     "type": "string"
+    },
+    "ease": {
+     "default": "smooth",
+     "title": "Ease",
+     "type": "string"
+    }
+   },
+   "title": "Move",
+   "type": "object"
+  },
+  "Prop": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "kind": {
+     "default": "rock",
+     "title": "Kind",
+     "type": "string"
+    },
+    "x": {
+     "default": 0,
+     "title": "X",
+     "type": "number"
+    }
+   },
+   "title": "Prop",
+   "type": "object"
+  },
+  "Say": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "text": {
+     "default": "",
+     "title": "Text",
+     "type": "string"
+    },
+    "dur": {
+     "default": 2.0,
+     "title": "Dur",
+     "type": "number"
+    },
+    "emotion": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Emotion"
+    },
+    "style": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Style"
+    },
+    "audio": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "asset path of a recorded/TTS clip (Phase 6)",
+     "title": "Audio"
+    }
+   },
+   "title": "Say",
+   "type": "object"
+  },
+  "Shot": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "title": "Id",
+     "type": "string"
+    },
+    "name": {
+     "default": "",
+     "title": "Name",
+     "type": "string"
+    },
+    "t": {
+     "default": 0,
+     "title": "T",
+     "type": "number"
+    },
+    "dur": {
+     "default": 0,
+     "title": "Dur",
+     "type": "number"
+    },
+    "note": {
+     "default": "",
+     "title": "Note",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id"
+   ],
+   "title": "Shot",
+   "type": "object"
+  },
+  "StanceEvent": {
+   "additionalProperties": true,
+   "properties": {
+    "id": {
+     "default": "",
+     "title": "Id",
+     "type": "string"
+    },
+    "src": {
+     "default": "ai",
+     "enum": [
+      "ai",
+      "user",
+      "import"
+     ],
+     "title": "Src",
+     "type": "string"
+    },
+    "lock": {
+     "default": false,
+     "title": "Lock",
+     "type": "boolean"
+    },
+    "t": {
+     "default": 0.0,
+     "title": "T",
+     "type": "number"
+    },
+    "stance": {
+     "default": "idle",
+     "title": "Stance",
+     "type": "string"
+    },
+    "blend": {
+     "default": 0.3,
+     "title": "Blend",
+     "type": "number"
+    }
+   },
+   "title": "StanceEvent",
+   "type": "object"
+  },
+  "Transition": {
+   "additionalProperties": false,
+   "properties": {
+    "in": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "In"
+    },
+    "out": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Out"
+    },
+    "color": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Color"
+    },
+    "dur": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Dur"
+    }
+   },
+   "title": "Transition",
+   "type": "object"
+  }
+ },
+ "additionalProperties": true,
+ "properties": {
+  "schema_version": {
+   "default": 1,
+   "title": "Schema Version",
+   "type": "integer"
+  },
+  "id": {
+   "title": "Id",
+   "type": "string"
+  },
+  "name": {
+   "default": "",
+   "title": "Name",
+   "type": "string"
+  },
+  "background": {
+   "$ref": "#/$defs/Background"
+  },
+  "groundY": {
+   "default": 570,
+   "title": "Groundy",
+   "type": "number"
+  },
+  "width": {
+   "default": 1280,
+   "title": "Width",
+   "type": "number"
+  },
+  "duration": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Duration"
+  },
+  "letterbox": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Letterbox"
+  },
+  "transition": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Transition"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null
+  },
+  "props": {
+   "items": {
+    "$ref": "#/$defs/Prop"
+   },
+   "title": "Props",
+   "type": "array"
+  },
+  "actors": {
+   "additionalProperties": {
+    "$ref": "#/$defs/Actor"
+   },
+   "title": "Actors",
+   "type": "object"
+  },
+  "camera": {
+   "items": {
+    "$ref": "#/$defs/CamEvent"
+   },
+   "title": "Camera",
+   "type": "array"
+  },
+  "fx": {
+   "items": {
+    "$ref": "#/$defs/FxEvent"
+   },
+   "title": "Fx",
+   "type": "array"
+  },
+  "captions": {
+   "items": {
+    "$ref": "#/$defs/Caption"
+   },
+   "title": "Captions",
+   "type": "array"
+  },
+  "audio": {
+   "items": {
+    "$ref": "#/$defs/AudioCue"
+   },
+   "title": "Audio",
+   "type": "array"
+  },
+  "shots": {
+   "items": {
+    "$ref": "#/$defs/Shot"
+   },
+   "title": "Shots",
+   "type": "array"
+  },
+  "local_actions": {
+   "additionalProperties": {
+    "$ref": "#/$defs/ActionDef"
+   },
+   "description": "one-off keyframed actions used only in this scene",
+   "title": "Local Actions",
+   "type": "object"
+  },
+  "next_event": {
+   "default": 1,
+   "title": "Next Event",
+   "type": "integer"
+  }
+ },
+ "required": [
+  "id"
+ ],
+ "title": "Scene",
+ "type": "object"
+}

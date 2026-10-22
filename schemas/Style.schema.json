@@ -1,0 +1,119 @@
+{
+ "additionalProperties": false,
+ "description": "Per-series look. Read by the renderer; every field is tunable.",
+ "properties": {
+  "line_weight": {
+   "default": 1.0,
+   "description": "multiplier on ink line width",
+   "maximum": 3.0,
+   "minimum": 0.3,
+   "title": "Line Weight",
+   "type": "number"
+  },
+  "boil_fps": {
+   "default": 12,
+   "description": "how often line wobble re-seeds",
+   "maximum": 24,
+   "minimum": 4,
+   "title": "Boil Fps",
+   "type": "integer"
+  },
+  "wobble": {
+   "default": 1.0,
+   "maximum": 3.0,
+   "minimum": 0.0,
+   "title": "Wobble",
+   "type": "number"
+  },
+  "animate_on": {
+   "default": "auto",
+   "enum": [
+    "ones",
+    "twos",
+    "auto"
+   ],
+   "title": "Animate On",
+   "type": "string"
+  },
+  "twos_fps": {
+   "default": 12,
+   "title": "Twos Fps",
+   "type": "integer"
+  },
+  "fast_action_threshold": {
+   "default": 0.6,
+   "description": "joint speed (rad/s-ish) above which auto switches to ones",
+   "title": "Fast Action Threshold",
+   "type": "number"
+  },
+  "palette_set": {
+   "default": "ibeno",
+   "title": "Palette Set",
+   "type": "string"
+  },
+  "grain": {
+   "default": 0.05,
+   "maximum": 0.5,
+   "minimum": 0.0,
+   "title": "Grain",
+   "type": "number"
+  },
+  "vignette": {
+   "default": 0.16,
+   "maximum": 0.6,
+   "minimum": 0.0,
+   "title": "Vignette",
+   "type": "number"
+  },
+  "shading": {
+   "default": "hatch",
+   "enum": [
+    "flat",
+    "hatch",
+    "crosshatch"
+   ],
+   "title": "Shading",
+   "type": "string"
+  },
+  "handheld": {
+   "default": 1.0,
+   "description": "camera drift amplitude",
+   "maximum": 4.0,
+   "minimum": 0.0,
+   "title": "Handheld",
+   "type": "number"
+  },
+  "overlap": {
+   "default": 1.0,
+   "description": "follow-through strength",
+   "maximum": 2.0,
+   "minimum": 0.0,
+   "title": "Overlap",
+   "type": "number"
+  },
+  "hit_stop_frames": {
+   "default": 3,
+   "maximum": 8,
+   "minimum": 0,
+   "title": "Hit Stop Frames",
+   "type": "integer"
+  },
+  "width": {
+   "default": 1280,
+   "title": "Width",
+   "type": "integer"
+  },
+  "height": {
+   "default": 720,
+   "title": "Height",
+   "type": "integer"
+  },
+  "fps": {
+   "default": 24,
+   "title": "Fps",
+   "type": "integer"
+  }
+ },
+ "title": "Style",
+ "type": "object"
+}

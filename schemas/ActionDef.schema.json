@@ -1,0 +1,179 @@
+{
+ "$defs": {
+  "Key": {
+   "additionalProperties": false,
+   "properties": {
+    "t": {
+     "maximum": 1,
+     "minimum": 0,
+     "title": "T",
+     "type": "number"
+    },
+    "pose": {
+     "anyOf": [
+      {
+       "additionalProperties": {
+        "type": "number"
+       },
+       "type": "object"
+      },
+      {
+       "type": "string"
+      }
+     ],
+     "description": "joint angles, or a stance name",
+     "title": "Pose"
+    },
+    "ease": {
+     "default": "smooth",
+     "title": "Ease",
+     "type": "string"
+    }
+   },
+   "required": [
+    "t"
+   ],
+   "title": "Key",
+   "type": "object"
+  }
+ },
+ "additionalProperties": true,
+ "properties": {
+  "desc": {
+   "default": "",
+   "title": "Desc",
+   "type": "string"
+  },
+  "category": {
+   "default": "custom",
+   "title": "Category",
+   "type": "string"
+  },
+  "dur": {
+   "default": 0.8,
+   "maximum": 60,
+   "minimum": 0.1,
+   "title": "Dur",
+   "type": "number"
+  },
+  "mask": {
+   "default": "full",
+   "enum": [
+    "full",
+    "upper"
+   ],
+   "title": "Mask",
+   "type": "string"
+  },
+  "keys": {
+   "items": {
+    "$ref": "#/$defs/Key"
+   },
+   "title": "Keys",
+   "type": "array"
+  },
+  "trail": {
+   "anyOf": [
+    {
+     "enum": [
+      "weapon",
+      "hand",
+      "foot"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Trail"
+  },
+  "face": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Face"
+  },
+  "endStance": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Endstance"
+  },
+  "dx": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Dx"
+  },
+  "dxSpan": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Dxspan"
+  },
+  "hit": {
+   "anyOf": [
+    {
+     "maximum": 0.95,
+     "minimum": 0.1,
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Hit"
+  },
+  "reach": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Reach"
+  },
+  "tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Tags",
+   "type": "array"
+  }
+ },
+ "required": [
+  "keys"
+ ],
+ "title": "ActionDef",
+ "type": "object"
+}
