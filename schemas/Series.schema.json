@@ -1,0 +1,46 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "schema_version": {
+   "default": 1,
+   "title": "Schema Version",
+   "type": "integer"
+  },
+  "id": {
+   "title": "Id",
+   "type": "string"
+  },
+  "title": {
+   "title": "Title",
+   "type": "string"
+  },
+  "logline": {
+   "default": "",
+   "title": "Logline",
+   "type": "string"
+  },
+  "episodes": {
+   "description": "ordered episode ids",
+   "items": {
+    "type": "string"
+   },
+   "title": "Episodes",
+   "type": "array"
+  },
+  "notes": {
+   "description": "research notes",
+   "items": {
+    "additionalProperties": true,
+    "type": "object"
+   },
+   "title": "Notes",
+   "type": "array"
+  }
+ },
+ "required": [
+  "id",
+  "title"
+ ],
+ "title": "Series",
+ "type": "object"
+}

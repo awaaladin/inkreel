@@ -1,0 +1,11 @@
+pydantic>=2.6
+fastapi>=0.110
+uvicorn>=0.27
+rich>=13
+anthropic>=0.40
+
+[dev]
+pytest
+httpx
+pillow
+numpy

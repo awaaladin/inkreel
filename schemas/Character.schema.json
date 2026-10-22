@@ -1,0 +1,184 @@
+{
+ "additionalProperties": true,
+ "properties": {
+  "id": {
+   "title": "Id",
+   "type": "string"
+  },
+  "name": {
+   "title": "Name",
+   "type": "string"
+  },
+  "rig_type": {
+   "default": "builtin_puppet",
+   "enum": [
+    "builtin_puppet",
+    "imported_parts",
+    "quadruped",
+    "serpent",
+    "winged"
+   ],
+   "title": "Rig Type",
+   "type": "string"
+  },
+  "height": {
+   "default": 300,
+   "maximum": 560,
+   "minimum": 120,
+   "title": "Height",
+   "type": "number"
+  },
+  "skin": {
+   "default": "#8a5a3b",
+   "title": "Skin",
+   "type": "string"
+  },
+  "hair": {
+   "default": "#1b1210",
+   "title": "Hair",
+   "type": "string"
+  },
+  "hair_style": {
+   "default": "short",
+   "title": "Hair Style",
+   "type": "string"
+  },
+  "top": {
+   "default": "#c8553d",
+   "title": "Top",
+   "type": "string"
+  },
+  "bottom": {
+   "default": "#2f3a4f",
+   "title": "Bottom",
+   "type": "string"
+  },
+  "accent": {
+   "default": "#e2b04a",
+   "title": "Accent",
+   "type": "string"
+  },
+  "outfit": {
+   "default": "tee",
+   "title": "Outfit",
+   "type": "string"
+  },
+  "legs": {
+   "default": "pants",
+   "title": "Legs",
+   "type": "string"
+  },
+  "build": {
+   "default": "average",
+   "title": "Build",
+   "type": "string"
+  },
+  "weapon": {
+   "default": "none",
+   "title": "Weapon",
+   "type": "string"
+  },
+  "weapon_color": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Weapon Color"
+  },
+  "boots": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Boots"
+  },
+  "barefoot": {
+   "default": false,
+   "title": "Barefoot",
+   "type": "boolean"
+  },
+  "headband": {
+   "default": false,
+   "title": "Headband",
+   "type": "boolean"
+  },
+  "beard": {
+   "default": false,
+   "title": "Beard",
+   "type": "boolean"
+  },
+  "glasses": {
+   "default": false,
+   "title": "Glasses",
+   "type": "boolean"
+  },
+  "scarf": {
+   "default": false,
+   "title": "Scarf",
+   "type": "boolean"
+  },
+  "scar": {
+   "default": false,
+   "title": "Scar",
+   "type": "boolean"
+  },
+  "head_scale": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Head Scale"
+  },
+  "notes": {
+   "default": "",
+   "title": "Notes",
+   "type": "string"
+  },
+  "voice_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Voice Id"
+  },
+  "default_stance": {
+   "default": "idle",
+   "title": "Default Stance",
+   "type": "string"
+  },
+  "views": {
+   "description": "available turnaround views",
+   "items": {
+    "type": "string"
+   },
+   "title": "Views",
+   "type": "array"
+  }
+ },
+ "required": [
+  "id",
+  "name"
+ ],
+ "title": "Character",
+ "type": "object"
+}

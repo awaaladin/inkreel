@@ -1,4 +1,4 @@
-"""Sample series "Ibeno Tides": 3 characters, 2 episodes, 7 scenes (duel, dialogue-only, chase, creature scare, rematch, ...)."""
+"""Sample series "Ibeno Tides": 3 characters, 2 episodes, 6 scenes (duel, dialogue-only, chase, creature scare, rematch, ...)."""
 from __future__ import annotations
 
 from .session import Session
