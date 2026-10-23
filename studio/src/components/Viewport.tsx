@@ -17,7 +17,7 @@ export function Viewport() {
   const cvRef = useRef<HTMLCanvasElement>(null);
   const [recording, setRecording] = useState(false);
   const [recSecs, setRecSecs] = useState(0);
-  const recRef = useRef<{ rec: MediaRecorder; chunks: Blob[]; stopAtEnd: boolean } | null>(null);
+  const recRef = useRef<{ rec: MediaRecorder; chunks: Blob[]; stopAtEnd: boolean; track: CanvasCaptureMediaStreamTrack; lastFrame: number } | null>(null);
   const [stopAtEnd, setStopAtEnd] = useState(true);
   const dragRef = useRef<{ x: number; y: number; mode: 'orbit' | 'pan' } | null>(null);
   const [, force] = useState(0);
@@ -74,9 +74,12 @@ export function Viewport() {
       }
       if (view.step(dt)) dirty = true;
       syncVoices(clock.playing);
+      const recNow = recRef.current;
+      if (recNow && now - recNow.lastFrame >= 1000 / 30 - 1) dirty = true;      // while recording, submit a frame 30 times a second
       if (!dirty) return;
       dirty = false;
       try { engine.renderOrbit(ctx, bundle, quantize(clock.t, bundle), engineOpts(bundle, view.v)); } catch (e) { console.error('render failed', e); }
+      if (recNow && now - recNow.lastFrame >= 1000 / 30 - 1) { recNow.lastFrame = now; recNow.track.requestFrame(); }
     };
     raf = requestAnimationFrame(frame);
     return () => { cancelAnimationFrame(raf); u1(); u2(); };
@@ -102,12 +105,16 @@ export function Viewport() {
   const startRecording = useCallback(() => {
     const cv = cvRef.current; if (!cv || recRef.current) return;
     if (typeof MediaRecorder === 'undefined') { toast({ kind: 'error', text: 'This browser cannot record the canvas.', hint: 'Use Chrome or Edge.' }); return; }
-    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
-    const stream = cv.captureStream(30);
-    try { conductor().dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr)); } catch { /* video only */ }   // the voices are recorded too
+    const mime = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
+    const stream = cv.captureStream(0);                 // frames are submitted explicitly from the render loop (steady, nothing dropped)
+    const track = stream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack;
+    if (voicesRef.current.length) {   // recorded voices are captured too (only then: an idle audio track would stall the recorder)
+      try { const c = conductor(); void c.ctx.resume(); c.dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr)); } catch { /* video only */ }
+    }
     const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12_000_000 });
     const chunks: Blob[] = [];
-    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    rec.ondataavailable = e => { console.debug('recorder chunk', e.data.size); if (e.data.size) chunks.push(e.data); };
+    rec.onerror = e => console.error('recorder error', e);
     rec.onstop = async () => {
       recRef.current = null; setRecording(false); clock.playing = false; clock.emit();
       const name = [series?.series.id, scope.scene ?? scope.episode].filter(Boolean).join('-') || 'recording';
@@ -117,7 +124,7 @@ export function Viewport() {
         void refreshRecordings();
       } catch (e) { const er = e as Error & { hint?: string }; toast({ kind: 'error', text: er.message, hint: er.hint }); }
     };
-    recRef.current = { rec, chunks, stopAtEnd };
+    recRef.current = { rec, chunks, stopAtEnd, track, lastFrame: 0 };
     rec.start(250); setRecording(true); setRecSecs(0);
     clock.t = clock.a; clock.playing = true; clock.emit();
   }, [clock, series, scope, stopAtEnd, toast, refreshRecordings]);
@@ -125,6 +132,7 @@ export function Viewport() {
   useEffect(() => { if (!recording) return; const i = setInterval(() => setRecSecs(s => s + 1), 1000); return () => clearInterval(i); }, [recording]);
 
   const empty = !!bundle && !bundle.scenes.length;
+  useEffect(() => view.subscribe(() => force(n => n + 1)), [view]);   // keep the preset buttons in sync while orbiting
   const presetActive = (p: { yaw: number; pitch: number }) => Math.abs(view.target.yaw - p.yaw) < 1 && Math.abs(view.target.pitch - p.pitch) < 1;
 
   return (
