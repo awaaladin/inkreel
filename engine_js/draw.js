@@ -92,6 +92,7 @@ function drawShadow(ctx, st, S) {
 }
 
 function drawActor(ctx, st, t, S0) {
+  if (st.ch.parts && NS.drawTraced) return NS.drawTraced(ctx, st, t, S0);   // character traced from a picture
   const ch = st.ch, P = solve(st.pose, ch), d = P.dims, H = d.H, b = d.b;
   const ink = ch.ink || '#1b1512';
   const S = { seed: S0.seed + strHash(st.id) * 3.31, amp: H * 0.0042 * (S0.wobble === undefined ? 1 : S0.wobble), ink, lw: Math.max(2.4, H * 0.0125) };
@@ -105,7 +106,9 @@ function drawActor(ctx, st, t, S0) {
   ctx.save();
   ctx.translate(st.x, st.y);
   ctx.scale(st.facing, 1);
-
+  // depth layers for the orbit view: S0.zHook(ctx, z) re-projects the following strokes at depth z (px along the character's facing-normal)
+  const Z = z => { if (S0.zHook) S0.zHook(ctx, z); };
+  Z(-0.09 * H);
   // back leg, back arm
   chain(ctx, [P.hip, P.knB, P.anB, P.toB], [wTh, wSh, wFt], [shade(thC, -0.14), shade(shC, -0.14), shade(bootCol, -0.14)], S);
   chain(ctx, [P.sh, P.elB, P.hnB], [wUp, wFo], [shade(upC, -0.14), shade(foreC, -0.14)], S);
@@ -132,6 +135,7 @@ function drawActor(ctx, st, t, S0) {
   ctx.restore();
 
   // torso
+  Z(0);
   {
     const a = P.torsoAngle * D2R, u = [Math.sin(a), -Math.cos(a)], n = [Math.cos(a), Math.sin(a)];
     const ws = 0.12 * H * b, wm = 0.115 * H * b, wh = 0.1 * H * b;
@@ -165,9 +169,11 @@ function drawActor(ctx, st, t, S0) {
   }
 
   // front leg
+  Z(0.05 * H);
   chain(ctx, [P.hip, P.knF, P.anF, P.toF], [wTh, wSh, wFt], [thC, shC, bootCol], S);
 
   // head
+  Z(0.025 * H);
   ctx.save();
   ctx.translate(P.hd[0], P.hd[1]); ctx.rotate(P.headAngle * D2R);
   blob(ctx, 0, 0, r, r * 1.05, skin, S, { n: 12, sd: 1 });
@@ -230,6 +236,7 @@ function drawActor(ctx, st, t, S0) {
   ctx.restore();
 
   // front arm, weapon, hand
+  Z(0.09 * H);
   chain(ctx, [P.sh, P.elF, P.hnF], [wUp, wFo], [upC, foreC], S);
   drawWeapon(ctx, ch, P, S, H);
   blob(ctx, P.hnF[0], P.hnF[1], 0.034 * H, 0.034 * H, skin, S, { n: 8 });

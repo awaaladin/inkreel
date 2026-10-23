@@ -51,7 +51,7 @@ class Style(_M):
 class Character(_Loose):
     id: str
     name: str
-    rig_type: Literal["builtin_puppet", "imported_parts", "quadruped", "serpent", "winged"] = "builtin_puppet"
+    rig_type: Literal["builtin_puppet", "traced", "quadruped", "serpent", "winged"] = "builtin_puppet"
     height: float = Field(300, ge=120, le=560)
     skin: str = "#8a5a3b"
     hair: str = "#1b1210"
@@ -76,6 +76,8 @@ class Character(_Loose):
     voice_id: str | None = None
     default_stance: str = "idle"
     views: list[str] = Field(default_factory=lambda: ["side"], description="available turnaround views")
+    rig: dict | None = Field(None, description="traced characters: bone lengths, rest angles and face anchor measured from the picture")
+    parts: list[dict] | None = Field(None, description="traced characters: vector parts (bone, depth z, colour shapes)")
 
 
 class Key(_M):
@@ -138,12 +140,32 @@ class Say(_Event):
     dur: float = 2.0
     emotion: str | None = None
     style: str | None = None
-    audio: str | None = Field(None, description="asset path of a recorded/TTS clip (Phase 6)")
+    audio: str | None = Field(None, description="file under the workspace audio/ folder: the voice actor's recording of this line")
+    env: list[float] | None = Field(None, description="mouth-openness envelope (0..1) measured from the recording, one value per 1/envFps s")
+    envFps: float | None = None
 
 
 class Face(_Event):
     dir: int | None = None
     target: str | None = None
+
+
+class PoseKey(_Event):
+    """One hand-keyed pose (frame by frame). Only the joints listed are set; ease 'hold' makes stepped, drawn-frame animation."""
+    pose: dict[str, float] = Field(default_factory=dict)
+    ease: str = "smooth"
+
+
+class Stroke(_M):
+    c: str = "#111111"
+    w: float = 4
+    pts: list[list[float]]
+
+
+class Drawing(_Event):
+    """A hand-drawn cel: shown from t for dur seconds."""
+    dur: float = 1 / 12
+    strokes: list[Stroke] = Field(default_factory=list)
 
 
 class Actor(_M):
@@ -156,6 +178,7 @@ class Actor(_M):
     emotes: list[Emote] = Field(default_factory=list)
     says: list[Say] = Field(default_factory=list)
     faces: list[Face] = Field(default_factory=list)
+    keys: list[PoseKey] = Field(default_factory=list)
 
 
 class FxEvent(_Event):
@@ -228,6 +251,7 @@ class Scene(_Loose):
     captions: list[Caption] = Field(default_factory=list)
     audio: list[AudioCue] = Field(default_factory=list)
     shots: list[Shot] = Field(default_factory=list)
+    drawings: list[Drawing] = Field(default_factory=list)
     local_actions: dict[str, ActionDef] = Field(default_factory=dict, description="one-off keyframed actions used only in this scene")
     next_event: int = 1
 

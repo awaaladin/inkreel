@@ -1,30 +1,46 @@
-// Studio state: server data, scope (what is on stage), playback clock, log, toasts. Playback time lives in an external store so
-// the 60fps clock never re-renders the React tree.
+// Studio state. Playback time and the orbit view live in external stores so dragging/playing never re-renders React.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { api, type ApiError, type Bundle, type SeriesData, type StudioEvent } from './lib/api';
-import { loadEngine, type InkreelNS } from './lib/engine';
+import { api, type ApiError, type Bundle, type Recording, type SeriesData } from './lib/api';
+import { FLAT, loadEngine, type InkreelNS, type View } from './lib/engine';
 
 export interface Scope { episode?: string; scene?: string }
-export interface LogLine { id: number; kind: 'ai' | 'user' | 'import' | 'history' | 'error' | 'system'; text: string; sub?: string }
-export interface Toast { id: number; kind: 'ok' | 'error' | 'info'; text: string; hint?: string }
-export type Connection = 'live' | 'reconnecting' | 'offline';
+export interface Toast { id: number; kind: 'ok' | 'error' | 'info'; text: string; hint?: string; href?: string }
 
-// ---------------------------------------------------------------- clock (external store)
-class Clock {
-  t = 0; playing = false; loop = false; speed = 1; total = 0;
+/** Playback clock over the whole-series timeline; `a`..`b` is the range of the current scope. */
+export class Clock {
+  t = 0; playing = false; loop = false; a = 0; b = 0; speed = 1;
   private subs = new Set<() => void>();
-  private snap = { t: 0, playing: false, loop: false, total: 0 };
+  private snap = { t: 0, playing: false, loop: false, a: 0, b: 0 };
   subscribe = (fn: () => void) => { this.subs.add(fn); return () => { this.subs.delete(fn); }; };
   getSnapshot = () => this.snap;
-  emit() { this.snap = { t: this.t, playing: this.playing, loop: this.loop, total: this.total }; this.subs.forEach(f => f()); }
+  emit() { this.snap = { t: this.t, playing: this.playing, loop: this.loop, a: this.a, b: this.b }; this.subs.forEach(f => f()); }
+}
+
+/** Orbit camera for the 3D view. Animates toward a target so presets glide and can be interrupted. */
+export class ViewStore {
+  v: View = { ...FLAT }; target: View = { ...FLAT };
+  private subs = new Set<() => void>();
+  subscribe = (fn: () => void) => { this.subs.add(fn); return () => { this.subs.delete(fn); }; };
+  emit() { this.subs.forEach(f => f()); }
+  set(p: Partial<View>) { this.v = { ...this.v, ...p }; this.target = { ...this.v }; this.emit(); }
+  glideTo(p: Partial<View>) { this.target = { ...this.target, ...p }; this.emit(); }
+  step(dt: number): boolean {
+    const k = 1 - Math.exp(-dt * 12); let moving = false;
+    for (const key of Object.keys(this.v) as (keyof View)[]) {
+      const d = this.target[key] - this.v[key];
+      if (Math.abs(d) > 0.01) { this.v[key] += d * k; moving = true; } else this.v[key] = this.target[key];
+    }
+    return moving;
+  }
+  get is3d() { return Math.abs(this.v.yaw) > 0.5 || Math.abs(this.v.pitch) > 0.5; }
 }
 
 interface Studio {
-  sid: string | null; series: SeriesData | null; bundle: Bundle | null; engine: InkreelNS | null; scope: Scope; setScope(s: Scope): void;
-  clock: Clock; log: LogLine[]; toasts: Toast[]; toast(t: Omit<Toast, 'id'>): void; dismissToast(id: number): void;
-  connection: Connection; loading: boolean; error: ApiError | null; theme: 'dark' | 'light'; toggleTheme(): void;
-  paletteOpen: boolean; setPaletteOpen(v: boolean): void; overlays: { thirds: boolean; safe: boolean }; toggleOverlay(k: 'thirds' | 'safe'): void;
-  undo(): Promise<void>; redo(): Promise<void>; exportScope(): Promise<void>; refresh(): Promise<void>; seriesList: string[]; setSid(s: string): void;
+  sid: string | null; seriesList: string[]; series: SeriesData | null; bundle: Bundle | null; engine: InkreelNS | null;
+  scope: Scope; setScope(s: Scope): void; clock: Clock; view: ViewStore; setSid(s: string): void;
+  toasts: Toast[]; toast(t: Omit<Toast, 'id'>): void; dismissToast(id: number): void; loading: boolean; error: ApiError | null;
+  recordings: Recording[]; refreshRecordings(): Promise<void>; undo(): Promise<void>; redo(): Promise<void>;
+  sceneStart(id: string): number; sceneThumbs: Record<string, string>;
 }
 
 const Ctx = createContext<Studio | null>(null);
@@ -40,73 +56,72 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [engine, setEngine] = useState<InkreelNS | null>(null);
   const [scope, setScope] = useState<Scope>({});
-  const [log, setLog] = useState<LogLine[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [connection, setConnection] = useState<Connection>('reconnecting');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => { try { return (localStorage.getItem('inkreel.theme') as 'dark' | 'light') || 'dark'; } catch { return 'dark'; } });
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [overlays, setOverlays] = useState({ thirds: false, safe: false });
+  const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [sceneThumbs, setThumbs] = useState<Record<string, string>>({});
   const clock = useRef(new Clock()).current;
-  const scopeRef = useRef(scope); scopeRef.current = scope;
+  const view = useRef(new ViewStore()).current;
   const sidRef = useRef(sid); sidRef.current = sid;
-
-  useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('inkreel.theme', theme); } catch { /* private mode */ } }, [theme]);
 
   const toast = useCallback((t: Omit<Toast, 'id'>) => {
     const id = nextId++; setToasts(x => [...x.slice(-3), { ...t, id }]);
-    setTimeout(() => setToasts(x => x.filter(y => y.id !== id)), t.kind === 'error' ? 7000 : 3200);
+    setTimeout(() => setToasts(x => x.filter(y => y.id !== id)), t.kind === 'error' ? 8000 : 5000);
   }, []);
   const dismissToast = useCallback((id: number) => setToasts(x => x.filter(y => y.id !== id)), []);
-  const addLog = useCallback((l: Omit<LogLine, 'id'>) => setLog(x => [{ ...l, id: nextId++ }, ...x].slice(0, 120)), []);
   const fail = useCallback((e: unknown) => { const err = e as ApiError; setError(err); toast({ kind: 'error', text: err.message, hint: err.hint }); }, [toast]);
 
-  // engine + workspace bootstrap
   useEffect(() => {
     loadEngine().then(setEngine).catch(e => fail(Object.assign(e, { status: 0, hint: 'The drawing engine failed to load from /engine.' })));
     api.workspace().then(w => { setSeriesList(w.series); setSidState(s => s ?? w.series[0] ?? null); setError(null); }).catch(fail).finally(() => setLoading(false));
   }, [fail]);
 
-  const loadSeries = useCallback(async () => {
-    const id = sidRef.current; if (!id) return;
-    try { setSeries(await api.series(id)); setError(null); } catch (e) { fail(e); }
-  }, [fail]);
-  const loadBundle = useCallback(async () => {
+  const refreshRecordings = useCallback(async () => { try { setRecordings((await api.recordings()).recordings); } catch { /* listed again next time */ } }, []);
+  useEffect(() => { void refreshRecordings(); }, [refreshRecordings]);
+
+  const load = useCallback(async () => {
     const id = sidRef.current; if (!id) return;
     try {
-      const { bundle: b } = await api.bundle(id, scopeRef.current.episode, scopeRef.current.scene);
-      setBundle(b);
+      const [s, b] = await Promise.all([api.series(id), api.bundle(id)]);
+      setSeries(s); setBundle(b.bundle); setError(null);
     } catch (e) { fail(e); }
   }, [fail]);
+  useEffect(() => { setSeries(null); setBundle(null); void load(); }, [sid, load]);
 
-  useEffect(() => { setSeries(null); void loadSeries(); }, [sid, loadSeries]);
-  useEffect(() => { void loadBundle(); }, [sid, scope, loadBundle]);
-
-  // total duration -> clock
-  useEffect(() => {
-    if (!bundle || !engine) { clock.total = 0; clock.emit(); return; }
-    clock.total = bundle.scenes.length ? engine.timeline(bundle).total : 0;
-    if (clock.t > clock.total) clock.t = 0;
-    clock.emit();
-  }, [bundle, engine, clock]);
-  useEffect(() => { clock.t = 0; clock.playing = false; clock.emit(); }, [scope, sid, clock]);
-
-  // live sync (SSE with reconnect)
+  // live sync: when the series changes on disk (Claude Code / terminal / another tab), reload
   useEffect(() => {
     const es = new EventSource('/api/events'); let timer = 0;
-    es.onopen = () => setConnection('live');
-    es.onerror = () => setConnection(es.readyState === EventSource.CLOSED ? 'offline' : 'reconnecting');
-    es.onmessage = m => {
-      const ev = JSON.parse(m.data) as StudioEvent;
-      if (ev.type === 'changed' && ev.series === sidRef.current) {
-        const src = (ev.src as string) || 'system';
-        addLog({ kind: src === 'ai' || src === 'user' || src === 'import' ? src : 'history', text: String(ev.label ?? 'change'), sub: `${(ev.scenes ?? []).join(', ') || 'series'} · rev ${ev.rev}` });
-        clearTimeout(timer); timer = window.setTimeout(() => { void loadSeries(); void loadBundle(); }, 120);
-      } else if (ev.type === 'cmd' && (ev as { action?: string }).action === 'play') { clock.playing = true; clock.t = 0; clock.emit(); }
-    };
+    es.onmessage = m => { const ev = JSON.parse(m.data); if (ev.type === 'changed' && ev.series === sidRef.current) { clearTimeout(timer); timer = window.setTimeout(() => void load(), 150); } };
     return () => { es.close(); clearTimeout(timer); };
-  }, [addLog, loadSeries, loadBundle, clock]);
+  }, [load]);
+
+  const timeline = useMemo(() => (bundle && engine && bundle.scenes.length ? engine.timeline(bundle) : { scenes: [], total: 0 }), [bundle, engine]);
+  const sceneStart = useCallback((id: string) => timeline.scenes.find(s => s.id === id)?.start ?? 0, [timeline]);
+
+  // clock range follows the scope
+  useEffect(() => {
+    let a = 0, b = timeline.total;
+    if (scope.scene) { const s = timeline.scenes.find(x => x.id === scope.scene); if (s) { a = s.start; b = s.start + s.duration; } }
+    else if (scope.episode && series) {
+      const ids = series.episodes.find(e => e.id === scope.episode)?.scenes ?? []; const ss = timeline.scenes.filter(x => ids.includes(x.id));
+      if (ss.length) { a = ss[0].start; b = ss[ss.length - 1].start + ss[ss.length - 1].duration; }
+    }
+    clock.a = a; clock.b = b; if (clock.t < a || clock.t > b) clock.t = a; clock.emit();
+  }, [scope, timeline, series, clock]);
+  useEffect(() => { clock.playing = false; clock.t = clock.a; clock.emit(); }, [scope, sid, clock]);
+
+  // scene thumbnails drawn by the same engine
+  useEffect(() => {
+    if (!engine || !bundle) return;
+    const cv = document.createElement('canvas'); cv.width = engine.VW; cv.height = engine.VH; const ctx = cv.getContext('2d')!;
+    const small = document.createElement('canvas'); small.width = 320; small.height = 180; const sc = small.getContext('2d')!;
+    const out: Record<string, string> = {};
+    for (const s of timeline.scenes) {
+      try { engine.renderOrbit(ctx, bundle, s.start + Math.min(s.duration * 0.4, 6), { view: FLAT, bubbles: true }); sc.drawImage(cv, 0, 0, 320, 180); out[s.id] = small.toDataURL('image/jpeg', 0.8); } catch { /* no thumb */ }
+    }
+    setThumbs(out);
+  }, [engine, bundle, timeline]);
 
   const undo = useCallback(async () => {
     if (!sid) return; try { const r = await api.undo(sid); toast({ kind: r.undone ? 'ok' : 'info', text: r.undone ? `Undid: ${r.undone.label}` : 'Nothing to undo' }); } catch (e) { fail(e); }
@@ -114,16 +129,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const redo = useCallback(async () => {
     if (!sid) return; try { const r = await api.redo(sid); toast({ kind: r.redone ? 'ok' : 'info', text: r.redone ? `Redid: ${r.redone.label}` : 'Nothing to redo' }); } catch (e) { fail(e); }
   }, [sid, toast, fail]);
-  const exportScope = useCallback(async () => {
-    if (!sid) return; try { await api.exportVideo(sid, { episode: scope.episode, scene: scope.scene }); toast({ kind: 'ok', text: 'Export started', hint: 'Progress appears in the render queue.' }); } catch (e) { fail(e); }
-  }, [sid, scope, toast, fail]);
 
   const value = useMemo<Studio>(() => ({
-    sid, series, bundle, engine, scope, setScope, clock, log, toasts, toast, dismissToast, connection, loading, error, theme,
-    toggleTheme: () => setTheme(t => (t === 'dark' ? 'light' : 'dark')), paletteOpen, setPaletteOpen, overlays,
-    toggleOverlay: k => setOverlays(o => ({ ...o, [k]: !o[k] })), undo, redo, exportScope, refresh: async () => { await loadSeries(); await loadBundle(); },
-    seriesList, setSid: s => { setSidState(s); setScope({}); },
-  }), [sid, series, bundle, engine, scope, clock, log, toasts, toast, dismissToast, connection, loading, error, theme, paletteOpen, overlays, undo, redo, exportScope, loadSeries, loadBundle, seriesList]);
-
+    sid, seriesList, series, bundle, engine, scope, setScope, clock, view, setSid: s => { setSidState(s); setScope({}); },
+    toasts, toast, dismissToast, loading, error, recordings, refreshRecordings, undo, redo, sceneStart, sceneThumbs,
+  }), [sid, seriesList, series, bundle, engine, scope, clock, view, toasts, toast, dismissToast, loading, error, recordings, refreshRecordings, undo, redo, sceneStart, sceneThumbs]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
