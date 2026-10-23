@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent, type WheelEvent as RWheelEvent } from 'react';
-import { api } from '../lib/api';
+import { api, type Ev } from '../lib/api';
 import { engineOpts, quantize } from '../lib/engine';
 import { useClock, useStudio } from '../state';
 import { Icon } from './Icon';
@@ -22,6 +22,36 @@ export function Viewport() {
   const dragRef = useRef<{ x: number; y: number; mode: 'orbit' | 'pan' } | null>(null);
   const [, force] = useState(0);
   const { playing } = useClock();
+  const audioRef = useRef<{ ctx: AudioContext; dest: MediaStreamAudioDestinationNode; els: Map<string, HTMLAudioElement>; prevT: number } | null>(null);
+
+  // ---- voices: every recorded line plays in sync with the clock (and is captured when recording)
+  const voices = (() => {
+    if (!bundle || !engine) return [] as { id: string; T0: number; url: string }[];
+    const starts = engine.timeline(bundle).scenes; const out: { id: string; T0: number; url: string }[] = [];
+    for (const sc of bundle.scenes) {
+      const s0 = starts.find(s => s.id === sc.id)?.start ?? 0;
+      for (const a of Object.values(sc.actors)) for (const say of (a.says ?? []) as (Ev & { audio?: string })[]) if (say.audio) out.push({ id: say.id, T0: s0 + say.t, url: `/audio/${say.audio}` });
+    }
+    return out;
+  })();
+  const voicesRef = useRef(voices); voicesRef.current = voices;
+  function conductor() {
+    if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = { ctx, dest: ctx.createMediaStreamDestination(), els: new Map(), prevT: clock.t }; }
+    return audioRef.current;
+  }
+  function syncVoices(playingNow: boolean) {
+    const A = audioRef.current; if (!A && !voicesRef.current.length) return;
+    const c = conductor(); const t = clock.t;
+    for (const v of voicesRef.current) {
+      let el = c.els.get(v.id);
+      if (!el) { el = new Audio(v.url); el.crossOrigin = 'anonymous'; const src = c.ctx.createMediaElementSource(el); src.connect(c.dest); src.connect(c.ctx.destination); c.els.set(v.id, el); }
+      const dur = Number.isFinite(el.duration) ? el.duration : 30;
+      const inside = t >= v.T0 && t < v.T0 + dur;
+      if (playingNow && inside && el.paused) { void c.ctx.resume(); el.currentTime = Math.max(0, t - v.T0); void el.play().catch(() => undefined); }
+      else if ((!playingNow || !inside) && !el.paused) el.pause();
+    }
+    c.prevT = t;
+  }
 
   // ---- render loop (draws only when something changed, or while playing / recording / gliding)
   useEffect(() => {
@@ -43,6 +73,7 @@ export function Viewport() {
         clock.emit(); dirty = true;
       }
       if (view.step(dt)) dirty = true;
+      syncVoices(clock.playing);
       if (!dirty) return;
       dirty = false;
       try { engine.renderOrbit(ctx, bundle, quantize(clock.t, bundle), engineOpts(bundle, view.v)); } catch (e) { console.error('render failed', e); }
@@ -73,6 +104,7 @@ export function Viewport() {
     if (typeof MediaRecorder === 'undefined') { toast({ kind: 'error', text: 'This browser cannot record the canvas.', hint: 'Use Chrome or Edge.' }); return; }
     const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
     const stream = cv.captureStream(30);
+    try { conductor().dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr)); } catch { /* video only */ }   // the voices are recorded too
     const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12_000_000 });
     const chunks: Blob[] = [];
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
@@ -113,6 +145,7 @@ export function Viewport() {
       <div className={`stage ${playing ? 'playing' : ''}`} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
         onWheel={wheel} onDoubleClick={reset} onContextMenu={e => e.preventDefault()} role="application" aria-label="Animation stage. Drag to orbit the camera.">
         <canvas ref={cvRef} width={1280} height={720} />
+        <canvas className="draw-live" width={1280} height={720} aria-hidden="true" />
         {recording && <div className="rec-badge"><i /> REC</div>}
         {(loading || (!bundle && !error) || !engine) && <div className="stage-msg"><div className="spin" /> {loading ? 'Opening workspace' : 'Loading scenes'}</div>}
         {empty && <div className="stage-msg"><div><Icon name="film" width={30} height={30} /><p>No scenes yet. Ask Claude Code to build one.</p></div></div>}
