@@ -1,29 +1,20 @@
-"""Compile a series/episode/scene into an engine bundle and render it through a RenderBackend.
+"""Compile a series/episode/scene into the bundle the studio's engine draws.
 
-`RenderBackend` is the seam between the data model and the pixels: Phase 1 implements it with the prototype JS engine
-(Node + @napi-rs/canvas); Phase 3 adds a Rust backend and golden tests compare the two.
+Drawing happens in the browser (live preview, orbit view and recording all use the same engine). The server only
+compiles the bundle and finds ffmpeg for turning recordings into MP4.
 """
 from __future__ import annotations
 
 import copy
-import json
 import os
 import shutil
-import subprocess
-import tempfile
 from pathlib import Path
-from typing import Callable, Protocol
 
 from . import model as M
 from . import timing
-from . import vocab as V
-from .store import Store, StoreError, Tx
-
-REPO = Path(__file__).resolve().parents[2]
-ENGINE_JS = REPO / "engine_js"
+from .store import Store, StoreError
 
 
-# --------------------------------------------------------------------------- bundle
 def _char_for_engine(ch: dict) -> dict:
     out = {k: v for k, v in ch.items() if v is not None}
     if "head_scale" in out:
@@ -34,7 +25,7 @@ def _char_for_engine(ch: dict) -> dict:
 
 
 def compile_bundle(store: Store, sid: str, eid: str | None = None, scene: str | None = None) -> dict:
-    """Self-contained legacy-format project for the engine.
+    """Self-contained project for the engine.
 
     eid=None and scene=None -> every episode in order; eid only -> that episode; scene -> just that scene.
     """
@@ -65,7 +56,6 @@ def bundle_duration(bundle: dict) -> float:
     return sum(timing.scene_duration(s) for s in bundle["scenes"])
 
 
-# --------------------------------------------------------------------------- tools
 def find_ffmpeg() -> str | None:
     p = shutil.which("ffmpeg")
     if p:
@@ -75,106 +65,3 @@ def find_ffmpeg() -> str | None:
         for c in root.glob("Gyan.FFmpeg*/**/bin/ffmpeg.exe"):
             return str(c)
     return None
-
-
-def find_node() -> str | None:
-    return shutil.which("node")
-
-
-class RenderError(Exception):
-    def __init__(self, msg: str, hint: str = ""):
-        super().__init__(msg)
-        self.hint = hint
-
-    def __str__(self):
-        return f"{super().__str__()} Hint: {self.hint}" if self.hint else super().__str__()
-
-
-class RenderBackend(Protocol):
-    name: str
-
-    def still(self, bundle: dict, t: float, out: Path, scale: float = 1.0) -> Path: ...
-
-    def video(self, bundle: dict, out: Path, fps: float | None = None, scale: float = 1.0, t0: float = 0.0, t1: float | None = None,
-              progress: Callable[[int, int], None] | None = None) -> Path: ...
-
-
-class NodeBackend:
-    """Prototype JS engine driven by engine_js/run.js."""
-    name = "js"
-
-    def _ensure(self):
-        node = find_node()
-        if not node:
-            raise RenderError("Node.js not found", "install Node 18+ from https://nodejs.org (winget install OpenJS.NodeJS.LTS)")
-        if not (ENGINE_JS / "node_modules" / "@napi-rs").exists():
-            npm = shutil.which("npm") or "npm"
-            r = subprocess.run([npm, "install", "--silent", "--no-audit", "--no-fund"], cwd=ENGINE_JS, capture_output=True, text=True, shell=os.name == "nt")
-            if r.returncode != 0:
-                raise RenderError("could not install the renderer's npm dependencies", (r.stderr or r.stdout)[-300:])
-        return node
-
-    def _write_bundle(self, bundle: dict) -> str:
-        fd, path = tempfile.mkstemp(suffix=".json", prefix="inkreel-bundle-")
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(bundle, f)
-        return path
-
-    def still(self, bundle: dict, t: float, out: Path, scale: float = 1.0) -> Path:
-        node = self._ensure()
-        out = Path(out).resolve()
-        out.parent.mkdir(parents=True, exist_ok=True)
-        bpath = self._write_bundle(bundle)
-        try:
-            r = subprocess.run([node, str(ENGINE_JS / "run.js"), "still", bpath, str(out), "--t", str(t), "--scale", str(scale)],
-                               capture_output=True, text=True, cwd=ENGINE_JS)
-        finally:
-            os.unlink(bpath)
-        if r.returncode != 0:
-            raise RenderError("still render failed", (r.stderr or r.stdout).strip()[-400:])
-        return out
-
-    def video(self, bundle: dict, out: Path, fps: float | None = None, scale: float = 1.0, t0: float = 0.0, t1: float | None = None,
-              progress: Callable[[int, int], None] | None = None) -> Path:
-        node = self._ensure()
-        ff = find_ffmpeg()
-        if not ff:
-            raise RenderError("ffmpeg not found", "install it: winget install Gyan.FFmpeg (Windows), brew install ffmpeg (macOS), apt install ffmpeg (Linux)")
-        out = Path(out).resolve()
-        out.parent.mkdir(parents=True, exist_ok=True)
-        bpath = self._write_bundle(bundle)
-        cmd = [node, str(ENGINE_JS / "run.js"), "video", bpath, str(out), "--scale", str(scale), "--ffmpeg", ff, "--t0", str(t0)]
-        if fps:
-            cmd += ["--fps", str(fps)]
-        if t1 is not None:
-            cmd += ["--t1", str(t1)]
-        import re
-        try:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=ENGINE_JS)
-            tail = []
-            for line in p.stdout:
-                m = re.match(r"frame (\d+)/(\d+)", line)
-                if m and progress:
-                    progress(int(m.group(1)), int(m.group(2)))
-                elif not m:
-                    tail.append(line.strip())
-            p.wait()
-        finally:
-            os.unlink(bpath)
-        if p.returncode != 0:
-            raise RenderError("video render failed", " ".join(tail[-3:]))
-        return out
-
-
-def default_backend() -> RenderBackend:
-    return NodeBackend()
-
-
-def locate(bundle: dict, scene: str, local_t: float) -> float:
-    """scene-local time -> bundle-global time"""
-    t = 0.0
-    for s in bundle["scenes"]:
-        if s["id"] == scene:
-            return t + local_t
-        t += timing.scene_duration(s)
-    raise StoreError(f"scene '{scene}' not in bundle")

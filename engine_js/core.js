@@ -115,6 +115,7 @@ function prep(scene, proj) {
     q.stances = st.sort((a, b) => a.t - b.t);
     q.emotes = (A.emotes || []).slice().sort((a, b) => a.t - b.t);
     q.says = (A.says || []).slice().sort((a, b) => a.t - b.t);
+    q.keys = (A.keys || []).slice().sort((a, b) => a.t - b.t);   // hand-keyed poses (frame by frame)
     p.actors[id] = q;
   }
   return p;
@@ -197,6 +198,16 @@ function gaitPose(phase, style, base) {
   return o;
 }
 
+// Mouth openness from the letters being spoken: open vowels wide, closed lips on m/b/p, pauses between words.
+const VOWEL_OPEN = { a: 1, o: 0.85, u: 0.55, e: 0.65, i: 0.5, y: 0.4 }, LIPS = 'mbp', WIDE = 'fvwq';
+function textMouth(text, prog) {
+  const s = text.toLowerCase(); if (!s) return 0;
+  const f = prog * s.length, i = Math.min(s.length - 1, Math.floor(f)), u = f - i;
+  const open = c => (VOWEL_OPEN[c] !== undefined ? VOWEL_OPEN[c] : c === ' ' || ',.!?;:'.includes(c) ? 0.05 : LIPS.includes(c) ? 0 : WIDE.includes(c) ? 0.25 : /[a-z]/.test(c) ? 0.3 : 0.1);
+  const a = open(s[i]), b = open(s[Math.min(s.length - 1, i + 1)]);
+  return clamp(a + (b - a) * smooth(u));
+}
+
 function emotionAt(q, t, act) {
   let e = 'neutral';
   for (const em of q.emotes) { if (em.t > t) break; e = em.emotion; }
@@ -261,6 +272,18 @@ function sampleActor(scene, chars, id, t, proj) {
     if (active.mask === 'upper') { pose.rx = ap.rx; pose.ry = ap.ry; }
   }
 
+  // hand-keyed poses override everything for the joints they set, between the first and last key.
+  // Per joint, interpolate between the neighbouring keys that set it; ease 'hold' gives stepped, drawn-frame style animation.
+  if (q.keys.length && t >= q.keys[0].t - 1e-4 && t <= q.keys[q.keys.length - 1].t + 1e-4) {
+    for (const j of JOINTS) {
+      let a = null, b = null;
+      for (const k of q.keys) { if (k.pose[j] === undefined) continue; if (k.t <= t + 1e-6) a = k; else { b = k; break; } }
+      if (a && b) pose[j] = lerp(a.pose[j], b.pose[j], ease(b.ease || 'smooth', (t - a.t) / (b.t - a.t || 1e-6)));
+      else if (a) pose[j] = a.pose[j];
+      else if (b) pose[j] = b.pose[j];
+    }
+  }
+
   // persistent displacement
   let dxSum = 0;
   for (const a of q.actions) {
@@ -273,7 +296,15 @@ function sampleActor(scene, chars, id, t, proj) {
   // face
   const emo = emotionAt(q, t, active);
   let mouth = 0;
-  if (say) { const prog = (t - say.t) / (say.dur * 0.75); if (prog < 1) mouth = 0.35 + 0.65 * Math.abs(Math.sin(t * 17 + ph)) * (0.6 + 0.4 * Math.sin(t * 5.1)); }
+  if (say) {
+    if (say.env && say.env.length) {            // lip-sync from the real recorded voice (amplitude envelope, 0..1)
+      const i = Math.min(say.env.length - 1, Math.max(0, Math.floor((t - say.t) * (say.envFps || 24))));
+      mouth = clamp(say.env[i] * 1.15);
+    } else {                                    // no recording yet: mouth shapes follow the actual letters of the line
+      const prog = (t - say.t) / (say.dur * 0.9);
+      if (prog >= 0 && prog < 1) mouth = textMouth(String(say.text || ''), prog);
+    }
+  }
   const blink = ((t + ph) % 3.6) < 0.11;
 
   return { id, x: bp.x + dxSum, y: bp.y + (scene.groundY || 570), facing, pose, emotion: emo, mouth, blink, say, active, speed: bp.speed, ch };
@@ -287,6 +318,7 @@ const mul = (a, k) => [a[0] * k, a[1] * k];
 
 function dims(ch) {
   const H = ch.height || 300, hs = ch.headScale || 1;
+  if (ch.rig && ch.rig.torso) { const r = ch.rig; return { H, torso: r.torso, neck: r.neck, headR: r.headR, up: r.up, fore: r.fore, thigh: r.thigh, shin: r.shin, foot: r.foot, b: 1 }; }   // traced character: its own proportions
   return { H, torso: 0.3 * H, neck: 0.03 * H, headR: 0.085 * H * hs, up: 0.165 * H, fore: 0.155 * H, thigh: 0.225 * H, shin: 0.215 * H, foot: 0.085 * H, b: BUILD[ch.build || 'average'] || 1 };
 }
 
@@ -426,6 +458,7 @@ function shakeAt(scene, t) {
   return [sx, sy];
 }
 
+NS.prepReset = scene => PREP.delete(scene);   // call after editing a scene object in memory
 Object.assign(NS, {
   VW, VH, TAU, D2R, clamp, lerp, sgn, smooth, ease, EASE, h1, vn, wob, strHash, hexToRgb, rgbStr, shade, alpha, mixHex,
   JOINTS, setLibrary, getLibrary, WEAPONS, BUILD, prep, basePos, facingAt, sampleActor, solve, toWorld, anchorPos, dims,

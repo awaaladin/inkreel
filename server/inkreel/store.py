@@ -422,10 +422,10 @@ class Store:
 def _events(scene: dict) -> dict[str, dict]:
     ev = {}
     for cid, a in (scene.get("actors") or {}).items():
-        for track in ("moves", "actions", "stances", "emotes", "says", "faces"):
+        for track in ("moves", "actions", "stances", "emotes", "says", "faces", "keys"):
             for e in a.get(track, []):
                 ev[f"{cid}.{track}.{e.get('id') or json.dumps(e, sort_keys=True)}"] = e
-    for track in ("camera", "fx", "captions", "audio", "props"):
+    for track in ("camera", "fx", "captions", "audio", "props", "drawings"):
         for e in scene.get(track, []):
             ev[f"{track}.{e.get('id') or json.dumps(e, sort_keys=True)}"] = e
     return ev

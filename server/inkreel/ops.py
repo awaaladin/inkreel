@@ -458,14 +458,14 @@ def place(ctx, a):
     st = choice(a, "stance", V.stances(), "idle")
     old = sc["actors"].get(cid)
     if old:
-        for track in ("moves", "actions", "says", "emotes", "faces", "stances"):
+        for track in ("moves", "actions", "says", "emotes", "faces", "stances", "keys"):
             for e in old.get(track, []):
                 ctx.guard(e, f"{track} event")
     act = {"x": num(a, "x", required=True), "y": num(a, "y", 0, lo=-400, hi=400),
            "facing": -1 if a.get("facing") == "left" else 1,
-           "moves": [], "actions": [], "stances": [], "emotes": [], "says": [], "faces": []}
+           "moves": [], "actions": [], "stances": [], "emotes": [], "says": [], "faces": [], "keys": []}
     if old:  # re-place keeps existing timeline
-        for track in ("moves", "actions", "says", "emotes", "faces", "stances"):
+        for track in ("moves", "actions", "says", "emotes", "faces", "stances", "keys"):
             act[track] = old.get(track, [])
     if st != "idle":
         act["stances"] = [s for s in act["stances"] if s["t"] >= 0] + [ctx.new_event(sc, "s", t=-1, stance=st, blend=0.01)]
@@ -907,10 +907,10 @@ def caption(ctx, a):
 def _all_events(sc: dict):
     """yield (list, event) for every editable event in a scene."""
     for cid, a in sc["actors"].items():
-        for track in ("moves", "actions", "stances", "emotes", "says", "faces"):
-            for e in a[track]:
+        for track in ("moves", "actions", "stances", "emotes", "says", "faces", "keys"):
+            for e in a.setdefault(track, []):
                 yield a[track], e, cid
-    for track in ("camera", "fx", "captions", "audio", "props"):
+    for track in ("camera", "fx", "captions", "audio", "props", "drawings"):
         for e in sc.get(track, []):
             yield sc[track], e, None
 
@@ -968,7 +968,7 @@ def set_lock(ctx, a):
 @op("remove_events",
     "Delete timeline events so a shot can be redone. `what`: all | moves | actions | says | emotes | faces | stances | fx | camera | captions | props. "
     "Optionally limit to one character (char) and/or a time window (t_from..t_to). Locked and user-authored events are always skipped for the AI.",
-    {"scene": SCENE_, "what": {"type": "string", "enum": ["all", "moves", "actions", "says", "emotes", "faces", "stances", "fx", "camera", "captions", "props"]},
+    {"scene": SCENE_, "what": {"type": "string", "enum": ["all", "moves", "actions", "says", "emotes", "faces", "stances", "keys", "fx", "camera", "captions", "props", "drawings"]},
      "char": CHAR_, "t_from": {"type": "number"}, "t_to": {"type": "number"}}, ["scene", "what"])
 def remove_events(ctx, a):
     sc = ctx.scene(a.get("scene"))
@@ -990,18 +990,20 @@ def remove_events(ctx, a):
         removed += 1
         return False
 
-    kinds = ["moves", "actions", "says", "emotes", "faces", "stances"]
+    kinds = ["moves", "actions", "says", "emotes", "faces", "stances", "keys"]
     for k in (kinds if what == "all" else [what] if what in kinds else []):
         for c, ac in sc["actors"].items():
             if cid and c != cid:
                 continue
-            ac[k] = [e for e in ac[k] if keep(e)]
+            ac[k] = [e for e in ac.get(k, []) if keep(e)]
     if what in ("all", "fx"):
         sc["fx"] = [e for e in sc["fx"] if (cid and e.get("at_char") != cid) or keep(e)]
     if what in ("all", "camera"):
         sc["camera"] = [e for e in sc["camera"] if keep(e)]
     if what in ("all", "captions"):
         sc["captions"] = [e for e in sc["captions"] if keep(e)]
+    if what in ("all", "drawings"):
+        sc["drawings"] = [e for e in sc.get("drawings", []) if keep(e)]
     if what == "props":
         sc["props"] = [e for e in sc["props"] if keep(e)]
     msg = f"removed {removed} {what} events from '{sc['id']}'"
@@ -1049,8 +1051,8 @@ def delete(ctx, a):
     if kind == "actor":
         cid = slug(a.get("id", ""))
         ac = get_actor(sc, cid)
-        for tr in ("moves", "actions", "stances", "emotes", "says", "faces"):
-            for e in ac[tr]:
+        for tr in ("moves", "actions", "stances", "emotes", "says", "faces", "keys"):
+            for e in ac.get(tr, []):
                 ctx.guard(e, f"{tr} event")
         del sc["actors"][cid]
         return f"removed {cid} from '{sc['id']}'"
@@ -1103,3 +1105,156 @@ def note_research(ctx, a):
                                       "sources": [str(x)[:300] for x in a.get("sources", [])][:6]})
     s["notes"] = s["notes"][-80:]
     return f"saved note '{a['topic']}'"
+
+
+# --------------------------------------------------------------------------- frame-by-frame animation
+@op("pose_key",
+    "Set a hand-keyed pose for a character at time t (frame by frame animation). Only the joints you list are set; the rest follow the normal animation. "
+    "Joints are degrees from straight down (+ = toward facing): " + ", ".join(V.JOINTS) + ". ease 'hold' keeps the pose until the next key (stepped, like drawn frames). "
+    "A key at (almost) the same time as an existing key updates it.",
+    {"scene": SCENE_, "char": CHAR_, "t": T_, "pose": {"type": "object", "description": "{joint: degrees}"},
+     "ease": {"type": "string", "enum": V.EASES}}, ["scene", "char", "t", "pose"], group="animate")
+def pose_key(ctx, a):
+    sc = ctx.scene(a.get("scene"))
+    ac = get_actor(sc, a.get("char", ""))
+    t = num(a, "t", required=True, lo=0)
+    pose = a.get("pose")
+    if not isinstance(pose, dict) or not pose:
+        raise OpError("pose must be a non-empty object of joint angles", f"joints: {V.JOINTS}")
+    clean = {}
+    for j, v in pose.items():
+        if j not in V.JOINTS:
+            raise OpError(f"unknown joint '{j}'", f"joints: {V.JOINTS}")
+        clean[j] = num({"v": v}, "v", required=True, lo=-720, hi=720)
+    ease_ = choice(a, "ease", V.EASES, "smooth")
+    keys = ac.setdefault("keys", [])
+    near = next((k for k in keys if abs(k["t"] - t) < 1 / 48), None)
+    if near:
+        ctx.guard(near, "key")
+        near["pose"].update(clean)
+        near["ease"] = ease_
+        if ctx.src == "user":
+            near["src"] = "user"
+        return f"updated key {near['id']} at t={r2(near['t'])}"
+    k = ctx.new_event(sc, "k", t=t, pose=clean, ease=ease_)
+    keys.append(k)
+    keys.sort(key=lambda e: e["t"])
+    return f"key {k['id']} for {a['char']} at t={r2(t)} ({len(keys)} keys)"
+
+
+_STRIDE = {"walk": 0.62, "sneak": 0.46, "run": 0.98}
+
+
+def gait_pose(phase: float, style: str) -> dict:
+    import math
+    run, sneak = style == "run", style == "sneak"
+    s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
+    A, K, AA = (58 if run else 24 if sneak else 30), (100 if run else 60 if sneak else 50), (55 if run else 28)
+    return {
+        "tF": A * s, "tB": -A * s,
+        "kF": -K * max(0, c) - 4, "kB": -K * max(0, -c) - 4,
+        "aF": -AA * s + (20 if run else 4), "aB": AA * s + (20 if run else -4),
+        "eF": (85 + 25 * max(0, -s)) if run else 18 + 22 * max(0, -s), "eB": (85 + 25 * max(0, s)) if run else 18 + 22 * max(0, s),
+        "torso": 15 if run else 22 if sneak else 4, "head": -8 if run else 0,
+        "ry": -0.05 * max(0, math.sin(2 * phase * math.tau + 0.5)) if run else 0,
+    }
+
+
+@op("walk",
+    "Walk/run/sneak a character along the ground and write the walk as editable frame-by-frame pose keys (every 1/fps s), so an animator can open "
+    "the keys and change individual frames. stepped=true holds each pose (drawn-on-twos look; use fps 12).",
+    {"scene": SCENE_, "char": CHAR_, "to_x": {"type": "number"}, "t": T_, "style": {"type": "string", "enum": ["walk", "run", "sneak"]},
+     "fps": {"type": "number", "description": "pose keys per second, 6-24 (default 12)"}, "stepped": {"type": "boolean"}},
+    ["scene", "char", "to_x", "t"], group="animate")
+def walk(ctx, a):
+    sc = ctx.scene(a.get("scene"))
+    cid = slug(a.get("char", ""))
+    ac = get_actor(sc, cid)
+    lk = ctx.lookup(sc)
+    style = choice(a, "style", ["walk", "run", "sneak"], "walk")
+    t = num(a, "t", required=True, lo=0)
+    fps = num(a, "fps", 12, lo=6, hi=24)
+    x0 = timing.x_at(sc, lk, cid, t)
+    tx = num(a, "to_x", required=True)
+    dist = abs(tx - x0)
+    if dist < 5:
+        raise OpError("the character is already there", "pick a to_x at least 5px away")
+    dur = dist / V.MOVE_SPEED[style]
+    ch = ctx.tx.read(ctx.char_rel(cid))
+    stride = _STRIDE[style] * (ch.get("height") or 300)
+    offset = timing.x_at(sc, lk, cid, t + dur) - timing.base_x(ac, t + dur)
+    ac["moves"].append(ctx.new_event(sc, "m", t=t, x=tx - offset, dur=dur, style="slide", ease="linear"))
+    n = max(2, int(dur * fps + 0.999))
+    keys = ac.setdefault("keys", [])
+    ease_ = "hold" if a.get("stepped") else "linear"
+    for i in range(n + 1):
+        u = min(1.0, i / n)
+        keys.append(ctx.new_event(sc, "k", t=r2(t + u * dur), pose={k: round(v, 2) for k, v in gait_pose(dist * u / stride, style).items()}, ease=ease_))
+    keys.sort(key=lambda e: e["t"])
+    return f"{cid} {style} x{r2(x0)} -> x{r2(tx)} over t={r2(t)}..{r2(t + dur)} with {n + 1} pose keys"
+
+
+@op("set_voice",
+    "Attach a voice recording to a spoken line: `audio` is a file in the workspace audio/ folder and `env` the measured mouth-openness envelope "
+    "(0..1 per 1/env_fps s). The mouth then follows the real voice.",
+    {"scene": SCENE_, "id": {"type": "string", "description": "id of the say event"}, "audio": {"type": "string"},
+     "env": {"type": "array", "items": {"type": "number"}}, "env_fps": {"type": "number"}, "dur": {"type": "number"}},
+    ["scene", "id", "audio"], group="dialogue")
+def set_voice(ctx, a):
+    sc = ctx.scene(a.get("scene"))
+    _, e, _ = _find_event(sc, a.get("id"))
+    if "text" not in e:
+        raise OpError(f"event {a.get('id')} is not a spoken line", "use the id of a say event")
+    e["audio"] = re.sub(r"[^A-Za-z0-9._-]", "", str(a["audio"]))
+    if a.get("env"):
+        e["env"] = [round(max(0.0, min(1.0, float(v))), 3) for v in a["env"]][:20000]
+        e["envFps"] = num(a, "env_fps", 24, lo=5, hi=120)
+    if a.get("dur") is not None:
+        e["dur"] = num(a, "dur", lo=0.2, hi=120)
+    return f"voice attached to line {e['id']} ({len(e.get('env', []))} envelope samples)"
+
+
+@op("add_drawing",
+    "Add a hand-drawn frame (cel) to a scene: strokes in world coordinates, shown from t for dur seconds (default one frame at 12fps). "
+    "Stroke: {c: '#hex', w: width px, pts: [[x,y],...]}. Drawing several cels at consecutive times gives hand-drawn frame-by-frame animation.",
+    {"scene": SCENE_, "t": T_, "dur": {"type": "number"}, "strokes": {"type": "array", "items": {"type": "object"}}},
+    ["scene", "t", "strokes"], group="animate")
+def add_drawing(ctx, a):
+    sc = ctx.scene(a.get("scene"))
+    t = num(a, "t", required=True, lo=0)
+    dur = num(a, "dur", 1 / 12, lo=1 / 60, hi=60)
+    strokes = []
+    for s in a.get("strokes") or []:
+        if not isinstance(s, dict) or not isinstance(s.get("pts"), list) or not s["pts"]:
+            raise OpError("each stroke needs pts: [[x,y],...]")
+        pts = [[round(float(p[0]), 1), round(float(p[1]), 1)] for p in s["pts"][:4000]]
+        strokes.append({"c": color(s.get("c", "#111111"), "stroke colour"), "w": num(s, "w", 4, lo=0.5, hi=80), "pts": pts})
+    if not strokes:
+        raise OpError("a drawing needs at least one stroke")
+    drawings = sc.setdefault("drawings", [])
+    near = next((d for d in drawings if abs(d["t"] - t) < 1 / 48), None)
+    if near:
+        ctx.guard(near, "drawing")
+        near["strokes"] += strokes
+        near["dur"] = dur if a.get("dur") is not None else near.get("dur", dur)
+        return f"added {len(strokes)} stroke(s) to drawing {near['id']} at t={r2(near['t'])}"
+    d = ctx.new_event(sc, "w", t=t, dur=dur, strokes=strokes)
+    drawings.append(d)
+    drawings.sort(key=lambda e: e["t"])
+    return f"drawing {d['id']} at t={r2(t)} ({len(strokes)} strokes)"
+
+
+@op("clear_drawing", "Remove all strokes of the hand-drawn frame at time t (or the whole drawing).",
+    {"scene": SCENE_, "t": T_, "last_stroke_only": {"type": "boolean"}}, ["scene", "t"], group="animate")
+def clear_drawing(ctx, a):
+    sc = ctx.scene(a.get("scene"))
+    t = num(a, "t", required=True, lo=0)
+    d = next((d for d in sc.get("drawings", []) if d["t"] - 1e-6 <= t < d["t"] + d.get("dur", 1 / 12) - 1e-6), None)
+    if not d:
+        raise OpError("there is no drawing at that time")
+    ctx.guard(d, "drawing")
+    if a.get("last_stroke_only") and len(d["strokes"]) > 1:
+        d["strokes"].pop()
+        return f"removed last stroke of {d['id']}"
+    sc["drawings"].remove(d)
+    return f"removed drawing {d['id']}"

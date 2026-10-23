@@ -175,15 +175,33 @@ def test_corrupt_file_has_actionable_error(built):
     assert not ok and "corrupt" in msg and "snapshot" in msg
 
 
-@pytest.mark.skipif(not render.find_node(), reason="node not installed")
-def test_still_is_deterministic(built, tmp_path):
-    b = render.compile_bundle(built, SID, scene="duel_at_dusk")
-    be = render.default_backend()
-    h = []
-    for i in range(2):
-        out = be.still(b, 6.5, tmp_path / f"s{i}.png")
-        h.append(hashlib.sha256(out.read_bytes()).hexdigest())
-    assert h[0] == h[1]
+@pytest.mark.skipif(not render.find_ffmpeg(), reason="ffmpeg not installed")
+def test_recording_saved_as_real_mp4(built, tmp_path):
+    """A real WebM (made by ffmpeg) is uploaded the way the browser does; the server must turn it into a playable MP4 on disk."""
+    import subprocess
+    from fastapi.testclient import TestClient
+    from inkreel.api import create_app
+    ff = render.find_ffmpeg()
+    webm = tmp_path / "in.webm"
+    subprocess.run([ff, "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=size=320x180:rate=30:duration=1", "-c:v", "libvpx", "-b:v", "500k", str(webm)], check=True)
+    c = TestClient(create_app(built))
+    r = c.post("/api/recordings?name=my scene/../x", content=webm.read_bytes()).json()
+    assert r["mp4"] and r["file"].endswith(".mp4") and ".." not in r["file"]
+    saved = built.root / "exports" / r["file"]
+    assert saved.exists() and saved.stat().st_size > 1000
+    probe = subprocess.run([ff, "-i", str(saved), "-f", "null", "-"], capture_output=True, text=True)
+    assert probe.returncode == 0 and "h264" in probe.stderr
+    assert any(x["file"] == r["file"] for x in c.get("/api/recordings").json()["recordings"])
+    assert c.post("/api/recordings", content=b"tiny").status_code == 400
+
+
+def test_lint_endpoint_reports_real_problems(built):
+    from fastapi.testclient import TestClient
+    from inkreel.api import create_app
+    Session(built, SID).run([("create_scene", dict(id="far", episode="ep1")), ("place", dict(scene="far", char="kabi", x=100)), ("place", dict(scene="far", char="ogun", x=1100)),
+                             ("act", dict(scene="far", char="kabi", action="slash_down", t=1, target="ogun"))], src="user")
+    f = TestClient(create_app(built)).get(f"/api/series/{SID}/lint/far").json()["findings"]
+    assert any(x["code"] == "out_of_reach" and x["severity"] == "error" for x in f)
 
 
 def test_api_roundtrip(built):
