@@ -88,8 +88,10 @@ def create_app(store: Store, hub: Hub | None = None) -> FastAPI:
     @app.middleware("http")
     async def nocache(request, call_next):
         resp = await call_next(request)
-        if request.url.path.startswith(("/api", "/engine", "/exports", "/audio")):
+        if request.url.path.startswith("/api"):
             resp.headers["Cache-Control"] = "no-store"
+        elif request.url.path.startswith(("/engine", "/exports", "/audio")):
+            resp.headers["Cache-Control"] = "no-cache"      # cache, but revalidate (cheap 304) so edits show up
         return resp
 
     def sess(sid: str, eid: str | None = None) -> Session:

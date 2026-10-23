@@ -13,18 +13,21 @@ export interface InkreelNS {
 declare global { interface Window { Inkreel?: InkreelNS } }
 
 let ready: Promise<InkreelNS> | null = null;
-const loadScript = (src: string) => new Promise<void>((res, rej) => {
-  const s = document.createElement('script'); s.src = src; s.onload = () => res(); s.onerror = () => rej(new Error(`failed to load ${src}`)); document.head.appendChild(s);
-});
+const FILES = ['core', 'draw', 'parts', 'world', 'engine', 'orbit'];
 
 export function loadEngine(): Promise<InkreelNS> {
   if (ready) return ready;
   ready = (async () => {
-    for (const f of ['core', 'draw', 'parts', 'world', 'engine', 'orbit']) await loadScript(`/engine/${f}.js?v=3`);
-    const lib = await (await fetch('/api/library')).json();
+    // fetch everything in parallel, then run the scripts in dependency order (they share one global namespace)
+    const [lib, ...codes] = await Promise.all([
+      fetch('/api/library').then(r => r.json()),
+      ...FILES.map(f => fetch(`/engine/${f}.js`).then(r => { if (!r.ok) throw new Error(`failed to load engine file ${f}.js (${r.status})`); return r.text(); })),
+    ]);
+    for (const code of codes) { const s = document.createElement('script'); s.textContent = code; document.head.appendChild(s); s.remove(); }
     const NS = window.Inkreel!; NS.setLibrary({ stances: lib.stances, emotions: lib.emotions, actions: lib.actions });
     const faces: [string, string][] = [['Patrick Hand', '/engine/fonts/patrick-hand-latin-400-normal.woff2'], ['Bangers', '/engine/fonts/bangers-latin-400-normal.woff2']];
-    await Promise.all(faces.map(async ([fam, url]) => { try { const f = new FontFace(fam, `url(${url})`); await f.load(); document.fonts.add(f); } catch { /* system font fallback */ } }));
+    const fonts = Promise.all(faces.map(async ([fam, url]) => { try { const f = new FontFace(fam, `url(${url})`); await f.load(); document.fonts.add(f); } catch { /* system font fallback */ } }));
+    await Promise.race([fonts, new Promise(r => setTimeout(r, 2500))]);   // never let a slow font block the stage
     return NS;
   })();
   ready.catch(() => { ready = null; });

@@ -18,6 +18,16 @@ function project(v, fx, fy, x, y, z) {
 }
 const setM = (ctx, m) => ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 
+// darker copy of a character's colours, for the thickness slices behind it (no canvas filters: those are very slow without a GPU)
+const TINT = {};
+function tinted(ch, k) {
+  const key = [ch.id, ch.skin, ch.hair, ch.top, ch.bottom, ch.accent, ch.boots, ch.weaponColor, k.toFixed(2)].join('|'); if (TINT[key]) return TINT[key];
+  const dk = hex => { const [r, g, b] = NS.hexToRgb(hex), h2 = n => Math.max(0, Math.min(255, Math.round(n * k))).toString(16).padStart(2, '0'); return '#' + h2(r) + h2(g) + h2(b); };
+  const c = Object.assign({}, ch);
+  for (const f of ['skin', 'hair', 'top', 'bottom', 'accent', 'boots', 'weaponColor', 'brow']) if (typeof c[f] === 'string' && c[f][0] === '#') c[f] = dk(c[f]);
+  return (TINT[key] = c);
+}
+
 function renderOrbit(ctx, project_, T, opts) {
   opts = opts || {};
   const loc = NS.locate(project_, T);
@@ -86,14 +96,20 @@ function renderOrbit(ctx, project_, T, opts) {
       const st = it.st;
       // shadow lies on the ground plane
       ctx.save(); setM(ctx, planeMat(v, fx, fy, it.z)); NS.drawShadow(ctx, st, { seed: 1 }); ctx.restore();
-      ctx.save();
-      const base = planeMat(v, fx, fy, it.z);
-      setM(ctx, base);
-      S0.zHook = (c, z) => { const m = c.getTransform(), n = planeMat(v, fx, fy, it.z + z); c.setTransform(m.a, m.b, m.c, m.d, m.e + (n.e - base.e), m.f + (n.f - base.f)); };
-      NS.drawActor(ctx, st, t, S0);
-      S0.zHook = null;
-      ctx.restore();
-      ctx.save(); setM(ctx, base); NS.drawTrail(ctx, R, st.id, t); ctx.restore();
+      // thickness: when orbiting, draw a few darker copies behind the character so it reads as a solid slab, not a sliver.
+      // (traced characters build their own thickness inside drawTraced)
+      const H = (st.ch && st.ch.height) || 300;
+      const passes = !flat && !st.ch.parts ? [-3, -2, -1, 0] : [0];
+      for (const k of passes) {
+        const shift = k * 0.012 * H, base = planeMat(v, fx, fy, it.z + shift);
+        ctx.save();
+        setM(ctx, base);
+        S0.zHook = (c, z) => { const m = c.getTransform(), n = planeMat(v, fx, fy, it.z + shift + z); c.setTransform(m.a, m.b, m.c, m.d, m.e + (n.e - base.e), m.f + (n.f - base.f)); };
+        NS.drawActor(ctx, k ? Object.assign({}, st, { ch: tinted(st.ch, 1 + k * 0.1) }) : st, t, S0);
+        S0.zHook = null;
+        ctx.restore();
+      }
+      ctx.save(); setM(ctx, planeMat(v, fx, fy, it.z)); NS.drawTrail(ctx, R, st.id, t); ctx.restore();
     }
   }
 

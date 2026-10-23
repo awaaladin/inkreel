@@ -28,7 +28,9 @@ export class ViewStore {
     const k = 1 - Math.exp(-dt * 12); let moving = false;
     for (const key of Object.keys(this.v) as (keyof View)[]) {
       const d = this.target[key] - this.v[key];
-      if (Math.abs(d) > 0.01) { this.v[key] += d * k; moving = true; } else this.v[key] = this.target[key];
+      if (d === 0) continue;
+      moving = true;                                   // also true on the frame that lands exactly on the target, so it gets drawn
+      this.v[key] = Math.abs(d) > 0.01 ? this.v[key] + d * k : this.target[key];
     }
     return moving;
   }
