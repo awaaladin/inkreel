@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useStudio } from '../state';
 import { Icon } from './Icon';
+import { Inspector } from './Inspector';
 import { Library } from './Library';
 import { Transport } from './Transport';
 import { Viewport } from './Viewport';
@@ -39,6 +40,7 @@ export function App() {
         <Viewport />
         <Transport />
       </main>
+      <div className="right"><Inspector /></div>
       <div className="toasts" role="status" aria-live="polite">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.kind}`} onClick={() => dismissToast(t.id)}>

@@ -33,7 +33,7 @@ export function loadEngine(): Promise<InkreelNS> {
 
 export function engineOpts(b: Bundle, view: View): Record<string, unknown> {
   const st = b.style;
-  return { view, boilFps: st.boil_fps ?? 12, wobble: st.wobble ?? 1, vignette: st.vignette ?? 0.16, handheld: st.handheld ?? 1 };
+  return { view, boilFps: st.boil_fps ?? 12, wobble: st.wobble ?? 1, vignette: st.vignette ?? 0.16, handheld: st.handheld ?? 1, onion: !!(window as unknown as { __onion?: boolean }).__onion };
 }
 
 export function quantize(T: number, b: Bundle): number {
