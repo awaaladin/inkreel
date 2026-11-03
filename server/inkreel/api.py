@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -71,7 +71,7 @@ def _err(e: Exception) -> HTTPException:
 
 
 def _safe(name: str, default: str) -> str:
-    s = re.sub(r"[^A-Za-z0-9._-]+", "-", name).strip("-.")
+    s = re.sub(r"\.{2,}", "-", re.sub(r"[^A-Za-z0-9._-]+", "-", name)).strip("-.")
     return s or default
 
 
@@ -261,7 +261,26 @@ def create_app(store: Store, hub: Hub | None = None) -> FastAPI:
         return StreamingResponse(gen(), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"})
 
     # ------------------------------------------------------------------ static
-    app.mount("/engine", StaticFiles(directory=str(REPO / "engine_js")), name="engine")
+    # engine files are served from memory (re-read only when the file changes): the workspace may live on a slow drive
+    engine_dir = (REPO / "engine_js").resolve()
+    engine_cache: dict[str, tuple[int, bytes]] = {}
+
+    @app.get("/engine/{path:path}")
+    def engine_file(path: str, request: Request):
+        f = (engine_dir / path).resolve()
+        if engine_dir not in f.parents or not f.is_file():
+            raise HTTPException(404, {"error": f"no engine file {path}", "hint": ""})
+        mtime = f.stat().st_mtime_ns
+        etag = f'"{mtime}"'
+        if request.headers.get("if-none-match") == etag:
+            return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "no-cache"})
+        hit = engine_cache.get(str(f))
+        if not hit or hit[0] != mtime:
+            hit = (mtime, f.read_bytes())
+            engine_cache[str(f)] = hit
+        import mimetypes
+        return Response(hit[1], media_type=mimetypes.guess_type(f.name)[0] or "application/octet-stream", headers={"ETag": etag, "Cache-Control": "no-cache"})
+
     app.mount("/exports", StaticFiles(directory=str(exports)), name="exports")
     app.mount("/audio", StaticFiles(directory=str(audio_dir)), name="audio")
     if STUDIO_DIST.exists():

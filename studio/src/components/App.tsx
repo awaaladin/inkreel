@@ -3,6 +3,7 @@ import { useStudio } from '../state';
 import { Icon } from './Icon';
 import { Inspector } from './Inspector';
 import { Library } from './Library';
+import { Timeline } from './Timeline';
 import { Transport } from './Transport';
 import { Viewport } from './Viewport';
 
@@ -39,6 +40,7 @@ export function App() {
       <main className="center">
         <Viewport />
         <Transport />
+        <Timeline />
       </main>
       <div className="right"><Inspector /></div>
       <div className="toasts" role="status" aria-live="polite">

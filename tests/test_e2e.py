@@ -152,6 +152,25 @@ def test_drawing_on_the_stage_saves_a_cel(page):
     pg.screenshot(path=str(store.root / "drawn.png"))
 
 
+def test_timeline_shows_events_and_dragging_a_block_retimes_it(page):
+    pg, store = page
+    blk = pg.locator(".tl-row", has_text="ima").locator(".blk", has_text="Hello").first
+    blk.wait_for(timeout=10000)
+    b = blk.bounding_box()
+    pg.mouse.move(b["x"] + 6, b["y"] + b["height"] / 2)
+    pg.mouse.down()
+    pg.mouse.move(b["x"] + 6 + 70, b["y"] + b["height"] / 2, steps=8)     # about one second to the right at the default zoom
+    pg.mouse.up()
+    pg.wait_for_timeout(1500)
+    say = store.reader().read(f"series/{SID}/episodes/ep1/scenes/short.json")["actors"]["ima"]["says"][0]
+    assert 1.1 < say["t"] < 1.5 and say["src"] == "user"            # was 0.3s
+    # a user edit can be locked so the AI cannot change it
+    pg.locator(".tl-row", has_text="ima").locator(".blk", has_text="Hello").first.click()
+    pg.get_by_role("button", name="Lock / unlock").click()
+    pg.wait_for_timeout(1200)
+    assert store.reader().read(f"series/{SID}/episodes/ep1/scenes/short.json")["actors"]["ima"]["says"][0]["lock"] is True
+
+
 def test_dialogue_line_is_listed_and_editable(page):
     pg, store = page
     pg.get_by_role("tab", name="Voice").click()
