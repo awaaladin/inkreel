@@ -171,6 +171,29 @@ def test_timeline_shows_events_and_dragging_a_block_retimes_it(page):
     assert store.reader().read(f"series/{SID}/episodes/ep1/scenes/short.json")["actors"]["ima"]["says"][0]["lock"] is True
 
 
+def test_voice_recording_attaches_audio_and_a_mouth_envelope(server):
+    """Uses Chrome's built-in test microphone (a real audio stream) through the real recorder, upload and envelope code."""
+    store, url = server
+    with pw.sync_playwright() as p:
+        b = p.chromium.launch(channel="chrome", headless=True, args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])
+        pg = b.new_context(permissions=["microphone"], viewport={"width": 1600, "height": 900}).new_page()
+        pg.goto(url)
+        pg.wait_for_function("() => !!window.Inkreel && !document.querySelector('.stage-msg')", timeout=30000)
+        pg.get_by_text("Short test").first.click()
+        pg.wait_for_timeout(1000)
+        pg.get_by_role("tab", name="Voice").click()
+        pg.get_by_role("button", name="Record voice").first.click()
+        pg.wait_for_selector("text=Stop", timeout=10000)
+        pg.wait_for_timeout(2500)
+        pg.get_by_role("button", name="Stop").first.click()
+        pg.wait_for_selector(".toast", timeout=30000)
+        b.close()
+    say = store.reader().read(f"series/{SID}/episodes/ep1/scenes/short.json")["actors"]["ima"]["says"][0]
+    assert say["audio"].endswith(".webm") and (store.root / "audio" / say["audio"]).stat().st_size > 1000
+    assert say["envFps"] == 24 and len(say["env"]) > 30 and max(say["env"]) > 0.5      # a real envelope measured from the recording
+    assert say["dur"] > 1.5
+
+
 def test_dialogue_line_is_listed_and_editable(page):
     pg, store = page
     pg.get_by_role("tab", name="Voice").click()
