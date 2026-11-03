@@ -102,11 +102,13 @@ def _foreground(img: np.ndarray) -> np.ndarray:
     for i in range(1, n):
         if stats[i, cv2.CC_STAT_AREA] >= max(30, big * 0.02):
             keep[lab == i] = 1
-    # fill holes (eyes, gaps between fingers stay; only fully enclosed background specks are filled)
+    # anything not connected to the picture's edge is inside the character (a white shirt on a white page, eyes, enclosed gaps)
     inv = (1 - keep).astype(np.uint8)
     n2, lab2, st2, _ = cv2.connectedComponentsWithStats(inv, connectivity=4)
+    h, w = keep.shape
+    edge_labels = set(np.unique(np.concatenate([lab2[0], lab2[-1], lab2[:, 0], lab2[:, w - 1]])).tolist())
     for i in range(1, n2):
-        if st2[i, cv2.CC_STAT_AREA] < max(20, big * 0.0008):
+        if i not in edge_labels:
             keep[lab2 == i] = 1
     return keep.astype(bool)
 
@@ -172,6 +174,11 @@ def _hex(bgr) -> str:
     return "#%02x%02x%02x" % (int(bgr[2]), int(bgr[1]), int(bgr[0]))
 
 
+def _darker(hexcol: str, k: float) -> str:
+    r, g, b = (int(hexcol[i:i + 2], 16) for i in (1, 3, 5))
+    return "#%02x%02x%02x" % (int(r * k), int(g * k), int(b * k))
+
+
 def _rings(mask: np.ndarray, eps: float, min_area: float) -> list[list[list[float]]]:
     cs, hier = cv2.findContours(mask.astype(np.uint8), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
     rings = []
@@ -196,7 +203,7 @@ def build(image: str | Path, layout: dict, colors: int = 10, detail: float = 1.0
     bone_of = assign_bones(mask, J, layout.get("weights"))
 
     # colour regions (k-means in Lab on the foreground only)
-    bgr = img[:, :, :3]
+    bgr = cv2.medianBlur(img[:, :, :3], 5)          # flatten tiny speckle so colour regions come out as clean shapes
     lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
     ys, xs = np.nonzero(mask)
     samples = lab[ys, xs]
@@ -230,8 +237,13 @@ def build(image: str | Path, layout: dict, colors: int = 10, detail: float = 1.0
             continue
         ox, oy = origins[name]
         shapes = []
+        ksz = max(1, int(round(1.6 / max(s, 0.05))))             # features thinner than ~1.6 studio px vanish (they would only be noise)
+        kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksz, ksz))
         for ci in range(k):
             cm = pm & (label == ci)
+            if cm.sum() < 6:
+                continue
+            cm = cv2.morphologyEx(cm.astype(np.uint8), cv2.MORPH_OPEN, kern).astype(bool)
             if cm.sum() < 6:
                 continue
             rings = _rings(cm, eps, min_area)
@@ -243,7 +255,23 @@ def build(image: str | Path, layout: dict, colors: int = 10, detail: float = 1.0
         shapes.sort(key=lambda sh: -sh["area"])
         for sh in shapes:
             del sh["area"]
-        parts.append({"bone": name, "z": DEPTH[name], "shapes": shapes})
+        sil = cv2.morphologyEx(pm.astype(np.uint8), cv2.MORPH_CLOSE, kern)
+        outline = [[[round((x - ox) * s, 1), round((y - oy) * s, 1)] for x, y in r] for r in _rings(sil.astype(bool), eps * 1.3, min_area * 2)]
+        if shapes and outline:   # solid base in the part's main colour, so removing tiny details never leaves holes
+            shapes.insert(0, {"fill": shapes[0]["fill"], "rings": outline})
+        parts.append({"bone": name, "z": DEPTH[name], "shapes": shapes, "outline": outline})
+
+    # A side view only shows the near arm and leg. With layout "mirror_back": true the hidden far limbs are copies of the visible ones,
+    # a little darker, so the walk has two arms and two legs (the back-limb joints in the layout should equal the front ones).
+    if layout.get("mirror_back"):
+        have = {p["bone"]: p for p in parts}
+        twin = {"armB_up": "armF_up", "armB_lo": "armF_lo", "legB_up": "legF_up", "legB_lo": "legF_lo", "footB": "footF"}
+        for back, front in twin.items():
+            if back not in have and front in have:
+                src = have[front]
+                parts.append({"bone": back, "z": DEPTH[back], "outline": src.get("outline", []),
+                              "shapes": [{"fill": _darker(sh["fill"], 0.78), "rings": sh["rings"]} for sh in src["shapes"]]})
+        parts.sort(key=lambda p: DRAW_ORDER.index(p["bone"]))
 
     # rig lengths in studio pixels, measured from the picture's own proportions (the solver uses these instead of its defaults)
     def L(a, b):

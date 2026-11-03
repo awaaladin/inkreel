@@ -355,6 +355,7 @@ def create_character(ctx, a):
     {"id": {"type": "string"}, "name": {"type": "string"}, "episode": {"type": "string", "description": "episode id (default: current)"},
      "background": {"type": "string", "enum": V.BACKGROUNDS}, "time": {"type": "string", "enum": V.TIMES, "description": "time of day / mood palette"},
      "weather": {"type": "string", "enum": ["clear", "rain"]},
+     "wind": {"type": "number", "description": "0-2: how hard the wind blows (forest canopy, trees, bushes, ferns and grass sway)"},
      "palette": {"type": "object", "description": "optional colour overrides: skyTop, skyBot, ground, ground2, far, mid, water, water2, stone, wall, tint (css rgba)"},
      "width": {"type": "number", "description": "world width, 1280-4000 (default 1280)"},
      "ground_y": {"type": "number", "description": "ground line y (default 570)"},
@@ -394,6 +395,8 @@ def create_scene(ctx, a):
         bg["time"] = choice(a, "time", V.TIMES)
     if a.get("weather"):
         bg["weather"] = choice(a, "weather", ["clear", "rain"])
+    if a.get("wind") is not None:
+        bg["wind"] = num(a, "wind", lo=0, hi=2)
     if isinstance(a.get("palette"), dict):
         pal = bg.setdefault("palette", {})
         for k, v in a["palette"].items():

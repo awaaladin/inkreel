@@ -104,7 +104,8 @@ function renderOrbit(ctx, project_, T, opts) {
         const shift = k * 0.012 * H, base = planeMat(v, fx, fy, it.z + shift);
         ctx.save();
         setM(ctx, base);
-        S0.zHook = (c, z) => { const m = c.getTransform(), n = planeMat(v, fx, fy, it.z + shift + z); c.setTransform(m.a, m.b, m.c, m.d, m.e + (n.e - base.e), m.f + (n.f - base.f)); };
+        let de = 0, df = 0;     // depth shift already applied to the current transform; each call moves to an ABSOLUTE depth, not a cumulative one
+        S0.zHook = (c, z) => { const m = c.getTransform(), n = planeMat(v, fx, fy, it.z + shift + z), ne = n.e - base.e, nf = n.f - base.f; c.setTransform(m.a, m.b, m.c, m.d, m.e + (ne - de), m.f + (nf - df)); de = ne; df = nf; };
         NS.drawActor(ctx, k ? Object.assign({}, st, { ch: tinted(st.ch, 1 + k * 0.1) }) : st, t, S0);
         S0.zHook = null;
         ctx.restore();

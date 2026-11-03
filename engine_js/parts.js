@@ -4,7 +4,7 @@
 (function (g) {
 'use strict';
 const NS = g.Inkreel;
-const { D2R, shade, wob } = NS;
+const { D2R, shade } = NS;
 
 const UP_BONES = { torso: 1, head: 1 };
 const shadeCache = {};
@@ -22,12 +22,13 @@ function frames(P, pose) {
   };
 }
 
+// The boil: every point is nudged by smooth noise of its POSITION, so neighbouring points move together (a living line, not static).
 function tracePath(ctx, rings, jit, seed, amp) {
   ctx.beginPath();
-  let n = 0;
   for (const ring of rings) {
     for (let i = 0; i < ring.length; i++) {
-      const x = ring[i][0] + (jit ? wob(seed, n) * amp : 0), y = ring[i][1] + (jit ? wob(seed + 5.1, n) * amp : 0); n++;
+      const px = ring[i][0], py = ring[i][1];
+      const x = px + (jit ? (NS.vn(seed + px * 0.045 + py * 0.031) - 0.5) * 2 * amp : 0), y = py + (jit ? (NS.vn(seed + 41.7 + px * 0.037 - py * 0.049) - 0.5) * 2 * amp : 0);
       if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
     }
     ctx.closePath();
@@ -62,6 +63,10 @@ function drawTraced(ctx, st, t, S0) {
     if (z !== lastZ || volume) { Z(z); lastZ = z; }
     ctx.save(); ctx.translate(o[0], o[1]); ctx.rotate(rot);
     for (const sh of part.shapes) { tracePath(ctx, sh.rings, amp > 0, seed + part.z * 17, amp); ctx.fillStyle = sh.fill; ctx.fill('evenodd'); }
+    if (part.outline && part.outline.length) {      // one clean hand-inked line around the whole part
+      tracePath(ctx, part.outline, amp > 0, seed + part.z * 17, amp * 1.2);
+      ctx.lineWidth = Math.max(1.5, H * 0.0085); ctx.lineJoin = 'round'; ctx.strokeStyle = ch.ink || '#1b1512'; ctx.stroke();
+    }
     // lip-sync: while speaking, a mouth shape opens over the head at the face anchor, following the voice (or the letters of the line)
     if (part.bone === 'head' && rig.face && st.mouth > 0.06) {
       const fc = rig.face, mw = fc.w, mh = mw * (0.12 + 0.62 * st.mouth);

@@ -12,8 +12,8 @@ LIB_DIR = REPO / "libraries"
 BACKGROUNDS = ["beach", "forest", "plains", "fortress", "street", "interior", "void"]
 TIMES = ["day", "dawn", "golden", "dusk", "night", "storm"]
 PROPS = ["palm", "tree", "bush", "rock", "crate", "barrel", "torch", "campfire", "hut", "boat", "lamp", "pillar",
-         "banner", "fence", "sign", "grass", "monster_silhouette"]
-FX_KINDS = ["impact", "slash", "dust", "ring", "sparks", "sfx_text", "flash", "vignette", "tint", "speedlines", "rain"]
+         "banner", "fence", "sign", "grass", "fern", "monster_silhouette"]
+FX_KINDS = ["impact", "slash", "dust", "ring", "sparks", "sfx_text", "flash", "vignette", "tint", "speedlines", "rain", "leaves", "gust"]
 PARTS = ["head", "chest", "hip", "hand_front", "hand_back", "foot_front", "foot_back", "weapon_tip", "feet", "center"]
 WEAPONS = ["none", "sword", "katana", "dagger", "staff", "spear", "club", "greatblade"]
 HAIR = ["short", "afro", "locs", "braids", "bun", "mohawk", "bald"]

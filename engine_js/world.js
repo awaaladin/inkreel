@@ -119,21 +119,39 @@ BG.beach = (ctx, R, pal, gy) => {
   });
 };
 
+// Forest: layered woods. Set background.wind (0..2) and the canopy, undergrowth and props sway; use the `leaves` and `gust` fx for blown leaves.
+const windOf = R => ((R.scene.background || {}).wind || 0);
 BG.forest = (ctx, R, pal, gy) => {
-  const x0 = -1600, x1 = R.W + 1600, S = SB(pal, 21.3);
-  layer(ctx, R, 0.05, () => { gradRect(ctx, x0, -800, x1, gy, pal.skyTop, pal.skyBot); if (pal.stars) stars(ctx, R, x0, x1, -300, 200); });
-  const treeRow = (f, base, col, hmin, hmax, step, seed) => layer(ctx, R, f, () => {
+  const x0 = -1600, x1 = R.W + 1600, S = SB(pal, 21.3), wind = windOf(R);
+  const sway = (x, k) => (Math.sin(R.t * (1.1 + k * 0.23) + x * 0.011 + k) * 7 + Math.sin(R.t * 3.3 + x * 0.05 + k) * 1.8) * wind;
+  layer(ctx, R, 0.05, () => {
+    gradRect(ctx, x0, -800, x1, gy, pal.skyTop, pal.skyBot); if (pal.stars) stars(ctx, R, x0, x1, -300, 200);
+    if (pal.sun && !pal.stars) glow(ctx, R.W * 0.72, -120, 520, pal.sun, 0.5);
+  });
+  // a row of trees: trunk with bark lines, a few branches, and a canopy of leaf clumps that sway in the wind
+  const treeRow = (f, base, col, hmin, hmax, step, seed, detail) => layer(ctx, R, f, () => {
     for (let x = x0; x < x1; x += step) {
-      const hh = hmin + rnd(x, seed) * (hmax - hmin), w = 38 + rnd(x, seed + 1) * 20, tx = x + rnd(x, seed + 2) * step * 0.5;
-      ctx.fillStyle = shade(col, -0.25); ctx.fillRect(tx - w * 0.18, base - hh, w * 0.36, hh);
-      for (let k = 0; k < 4; k++) { const cx = tx + (rnd(x, k + seed) - 0.5) * 90, cy = base - hh - 20 + (rnd(x, k + 7) - 0.5) * 100; blob(ctx, cx, cy, 70 + rnd(x, k + 9) * 40, 60 + rnd(x, k + 11) * 36, col, S, { n: 9, stroke: f > 0.4, lw: 2.5 }); }
+      const hh = hmin + rnd(x, seed) * (hmax - hmin), w = 38 + rnd(x, seed + 1) * 26, tx = x + rnd(x, seed + 2) * step * 0.6, dark = shade(col, -0.32);
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(tx - w * 0.28, base); ctx.lineTo(tx - w * 0.15, base - hh); ctx.lineTo(tx + w * 0.15, base - hh); ctx.lineTo(tx + w * 0.3, base); ctx.closePath(); ctx.fill();
+      if (detail) { ctx.strokeStyle = alpha(pal.ink, 0.35); ctx.lineWidth = 1.6; for (let k = 0; k < 5; k++) { const yy = base - hh * (0.1 + 0.17 * k); ctx.beginPath(); ctx.moveTo(tx - w * 0.2, yy); ctx.lineTo(tx - w * 0.05, yy - 22); ctx.stroke(); } }
+      const clumps = detail ? 7 : 4;
+      for (let k = 0; k < clumps; k++) {
+        const a = (k / clumps) * Math.PI * 2 + rnd(x, k + 3), r = 30 + rnd(x, k + 5) * 80;
+        const cx = tx + Math.cos(a) * r * 1.5 + sway(tx, k), cy = base - hh + Math.sin(a) * r * 0.55 - 10;
+        blob(ctx, cx, cy, 64 + rnd(x, k + 9) * 46, 52 + rnd(x, k + 11) * 36, k % 2 ? col : shade(col, 0.09), S, { n: 9, stroke: f > 0.3, lw: 2.4 });
+      }
     }
   });
-  treeRow(0.2, gy - 120, mixHex(pal.far, pal.skyBot, 0.35), 260, 380, 230, 3);
-  treeRow(0.5, gy - 70, pal.far, 320, 460, 340, 6);
-  layer(ctx, R, 0.5, () => { // light rays
+  treeRow(0.12, gy - 150, mixHex(pal.far, pal.skyBot, 0.5), 300, 420, 210, 3, false);
+  treeRow(0.25, gy - 120, mixHex(pal.far, pal.skyBot, 0.28), 300, 440, 250, 8, false);
+  treeRow(0.45, gy - 80, pal.far, 340, 480, 300, 6, true);
+  layer(ctx, R, 0.5, () => { // sun shafts through the leaves, breathing with the wind
     if (pal.stars) return;
-    for (let i = 0; i < 5; i++) { const x = 100 + i * 330 + Math.sin(R.t * 0.3 + i) * 20; ctx.fillStyle = `rgba(255,248,200,${0.1 + 0.04 * Math.sin(R.t + i)})`; ctx.beginPath(); ctx.moveTo(x, -200); ctx.lineTo(x + 70, -200); ctx.lineTo(x + 330, gy); ctx.lineTo(x + 180, gy); ctx.closePath(); ctx.fill(); }
+    for (let i = 0; i < 6; i++) { const x = 60 + i * 300 + Math.sin(R.t * (0.3 + wind * 0.4) + i) * (20 + wind * 25); ctx.fillStyle = `rgba(255,248,200,${0.1 + 0.05 * Math.sin(R.t * (1 + wind) + i)})`; ctx.beginPath(); ctx.moveTo(x, -200); ctx.lineTo(x + 70, -200); ctx.lineTo(x + 330, gy); ctx.lineTo(x + 180, gy); ctx.closePath(); ctx.fill(); }
+  });
+  treeRow(0.7, gy - 40, pal.mid, 380, 520, 420, 11, true);
+  layer(ctx, R, 0.9, () => { // undergrowth
+    for (let x = x0; x < x1; x += 130) { const hh = 40 + rnd(x, 21) * 50; for (let k = 0; k < 3; k++) blob(ctx, x + k * 34 + sway(x, k) * 0.5, gy - 70 - hh * 0.4, 50 + rnd(x, k + 22) * 24, 36 + hh * 0.5, shade(pal.mid, -0.1 - 0.06 * k), S, { n: 8, stroke: true, lw: 2 }); }
   });
   layer(ctx, R, 1, () => ground(ctx, pal, gy, x0, x1, -95, S, shade(pal.mid, -0.1)));
 };
@@ -255,12 +273,25 @@ PROP.palm = (ctx, R, p, pal, S, s) => {
   blob(ctx, tx, ty + 8 * s, 14 * s, 14 * s, '#6a4a28', S, { n: 7 });
 };
 PROP.tree = (ctx, R, p, pal, S, s) => {
-  const hh = 300 * s;
-  poly(ctx, [[-20 * s, 0], [-12 * s, -hh * 0.6], [-8 * s, -hh], [10 * s, -hh], [14 * s, -hh * 0.6], [24 * s, 0]], '#7b5430', S);
-  const sway = Math.sin(R.t * 0.9 + p.x) * 3 * s;
-  for (const [cx, cy, r] of [[-60, -hh - 10, 80], [50, -hh - 20, 90], [0, -hh - 90, 85], [-20, -hh + 20, 70], [70, -hh + 20, 60]]) blob(ctx, cx * s + sway, cy * s, r * s, r * 0.82 * s, pal.mid, S, { n: 10 });
+  const hh = 300 * s, wind = windOf(R);
+  poly(ctx, [[-22 * s, 0], [-13 * s, -hh * 0.6], [-8 * s, -hh], [10 * s, -hh], [14 * s, -hh * 0.6], [26 * s, 0]], '#7b5430', S);
+  hatch(ctx, -20 * s, -hh, 22 * s, 0, pal.ink, 0.16, p.x, 7 * s, 1.5);
+  ctx.strokeStyle = alpha(pal.ink, 0.45); ctx.lineWidth = 2; for (let k = 0; k < 6; k++) { const yy = -hh * (0.08 + 0.15 * k); ctx.beginPath(); ctx.moveTo(-10 * s, yy); ctx.quadraticCurveTo(-2 * s, yy - 12 * s, 6 * s, yy - 4 * s); ctx.stroke(); }
+  const sw = (k) => (Math.sin(R.t * (0.9 + k * 0.2) + p.x * 0.01 + k) * 3 + Math.sin(R.t * 3 + k + p.x) * 0.8) * s * (1 + 3.5 * wind);
+  for (const [cx, cy, r, c] of [[-60, -hh - 10, 80, 0], [50, -hh - 20, 90, 1], [0, -hh - 90, 85, 2], [-20, -hh + 20, 70, 3], [70, -hh + 20, 60, 4], [-95, -hh + 30, 55, 5]])
+    blob(ctx, cx * s + sw(c), cy * s + Math.sin(R.t * 2 + c) * wind * 2 * s, r * s, r * 0.82 * s, c % 2 ? pal.mid : shade(pal.mid, 0.1), S, { n: 10 });
 };
-PROP.bush = (ctx, R, p, pal, S, s) => { for (const [cx, cy, r] of [[-36, -26, 40], [10, -34, 46], [50, -20, 34]]) blob(ctx, cx * s, cy * s, r * s, r * 0.8 * s, shade(pal.mid, -0.05), S, { n: 8 }); };
+PROP.bush = (ctx, R, p, pal, S, s) => { const wind = windOf(R); for (const [cx, cy, r] of [[-36, -26, 40], [10, -34, 46], [50, -20, 34]]) blob(ctx, cx * s + Math.sin(R.t * 2.1 + cx + p.x) * (1 + 4 * wind) * s, cy * s, r * s, r * 0.8 * s, shade(pal.mid, -0.05), S, { n: 8 }); };
+PROP.fern = (ctx, R, p, pal, S, s) => {
+  const wind = windOf(R);
+  for (let i = 0; i < 9; i++) {
+    const a = (-165 + i * 18) * D2R, len = (70 + 26 * ((i * 7) % 3)) * s, w = Math.sin(R.t * (1.6 + (i % 3) * 0.3) + i + p.x) * (0.05 + 0.12 * wind);
+    const ex = Math.cos(a + w) * len, ey = Math.sin(a + w) * len * 0.9, mx = Math.cos(a + w * 0.4) * len * 0.55, my = Math.sin(a + w * 0.4) * len * 0.5 - 14 * s;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(mx - 9 * s, my, ex, ey); ctx.quadraticCurveTo(mx + 9 * s, my + 6 * s, 0, 0); ctx.closePath();
+    ctx.fillStyle = i % 2 ? shade(pal.mid, 0.05) : shade(pal.mid, -0.1); ctx.fill(); inkStroke(ctx, S, 2);
+    line(ctx, [0, 0], [ex * 0.9, ey * 0.9], S, 1.4, alpha(pal.ink, 0.4));
+  }
+};
 PROP.rock = (ctx, R, p, pal, S, s) => { poly(ctx, [[-70, 0], [-80, -50], [-40, -100], [20, -118], [70, -70], [86, 0]].map(q => [q[0] * s, q[1] * s]), pal.stone, S); hatch(ctx, -80 * s, -118 * s, 86 * s, 0, pal.ink, 0.12, 3, 12, 0.8); line(ctx, [-30 * s, -90 * s], [10 * s, -40 * s], S, 2, alpha(pal.ink, 0.5)); };
 PROP.crate = (ctx, R, p, pal, S, s) => { const w = 90 * s; poly(ctx, [[-w / 2, 0], [-w / 2, -w], [w / 2, -w], [w / 2, 0]], '#b58a52', S); line(ctx, [-w / 2, -w], [w / 2, 0], S, 3, alpha(pal.ink, 0.6)); line(ctx, [w / 2, -w], [-w / 2, 0], S, 3, alpha(pal.ink, 0.6)); line(ctx, [-w / 2, -w / 2], [w / 2, -w / 2], S, 2, alpha(pal.ink, 0.4)); };
 PROP.barrel = (ctx, R, p, pal, S, s) => { const w = 70 * s, h = 96 * s; poly(ctx, [[-w / 2, 0], [-w * 0.6, -h / 2], [-w / 2, -h], [w / 2, -h], [w * 0.6, -h / 2], [w / 2, 0]], '#9a6a3a', S); line(ctx, [-w * 0.58, -h * 0.28], [w * 0.58, -h * 0.28], S, 5, '#4a4a4a'); line(ctx, [-w * 0.58, -h * 0.72], [w * 0.58, -h * 0.72], S, 5, '#4a4a4a'); };
@@ -371,6 +402,39 @@ const FXS = {
       for (let i = 0; i < n; i++) { const y = rnd(i + fr * 7, 1) * VH, len = 200 + rnd(i + fr, 2) * 500, x = ((rnd(i + fr * 3, 3) * (VW + 600)) + sgn * R.t * 900) % (VW + 600) - 300, th = 1.5 + rnd(i, 4) * 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + sgn * len, y - th); ctx.lineTo(x + sgn * len, y + th); ctx.closePath(); ctx.fill(); }
     } else {
       for (let i = 0; i < n * 1.6; i++) { const a = rnd(i + fr * 5, 1) * TAU, r0 = VH * (0.38 + rnd(i + fr, 2) * 0.22), r1 = VH * (0.9 + rnd(i, 3) * 0.3), th = 0.012 + rnd(i, 4) * 0.025; ctx.beginPath(); ctx.moveTo(VW / 2 + Math.cos(a) * r0, VH / 2 + Math.sin(a) * r0); ctx.lineTo(VW / 2 + Math.cos(a - th) * r1, VH / 2 + Math.sin(a - th) * r1); ctx.lineTo(VW / 2 + Math.cos(a + th) * r1, VH / 2 + Math.sin(a + th) * r1); ctx.closePath(); ctx.fill(); }
+    }
+    ctx.restore();
+  },
+  // leaves blown across the screen by the wind: near leaves are bigger and faster (parallax), each tumbles and flutters
+  leaves(ctx, R, f, u) {
+    const n = Math.floor(46 * (f.intensity || 1)), dir = f.dir === 'left' ? -1 : 1, env = u < 0.08 ? u / 0.08 : u > 0.92 ? (1 - u) / 0.08 : 1;
+    const cols = f.color ? [f.color] : ['#6fb04a', '#8fc45a', '#4e9a3e', '#b8c455', '#c9953a', '#3f8a4a'];
+    ctx.save();
+    for (let i = 0; i < n; i++) {
+      const d = rnd(i, 1), speed = (90 + 330 * d) * (0.8 + rnd(i, 2) * 0.5), span = VW + 500;
+      let x = (rnd(i, 3) * span + dir * R.t * speed) % span; if (x < 0) x += span; x -= 250;
+      const y = (rnd(i, 4) * (VH + 160) + R.t * (18 + 40 * d) + Math.sin(R.t * (1.4 + rnd(i, 5) * 2) + i) * 34 * (0.4 + d)) % (VH + 160) - 80;
+      const sz = 5 + 11 * d, rot = R.t * (1.2 + rnd(i, 6) * 3.5) * (i % 2 ? 1 : -1) + i, flip = Math.abs(Math.sin(R.t * (2 + rnd(i, 7) * 3) + i));
+      ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, 0.35 + 0.65 * flip); ctx.globalAlpha = env * (0.55 + 0.4 * d);
+      ctx.fillStyle = cols[Math.floor(rnd(i, 8) * cols.length) % cols.length];
+      ctx.beginPath(); ctx.moveTo(-sz, 0); ctx.quadraticCurveTo(0, -sz * 0.75, sz, 0); ctx.quadraticCurveTo(0, sz * 0.75, -sz, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(20,40,15,.45)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-sz, 0); ctx.lineTo(sz * 0.8, 0); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  },
+  // long soft streaks that sweep across the frame: the visible wind
+  gust(ctx, R, f, u) {
+    const n = Math.floor(9 * (f.intensity || 1)), dir = f.dir === 'left' ? -1 : 1, env = u < 0.12 ? u / 0.12 : u > 0.88 ? (1 - u) / 0.12 : 1;
+    ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = f.color || '#ffffff';
+    for (let i = 0; i < n; i++) {
+      const span = VW + 900, speed = 380 + rnd(i, 1) * 360, len = 220 + rnd(i, 2) * 320;
+      let x = (rnd(i, 3) * span + dir * R.t * speed) % span; if (x < 0) x += span; x -= 450;
+      const y = 60 + rnd(i, 4) * (VH - 120), amp = 10 + rnd(i, 5) * 22, ph = R.t * 2 + i;
+      ctx.globalAlpha = env * (0.12 + 0.14 * rnd(i, 6)); ctx.lineWidth = 1.5 + rnd(i, 7) * 2.5;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      for (let k = 1; k <= 8; k++) { const q = k / 8; ctx.lineTo(x + dir * q * len, y + Math.sin(ph + q * 5) * amp * q); }
+      ctx.stroke();
     }
     ctx.restore();
   },
