@@ -39,6 +39,20 @@ export function engineOpts(b: Bundle, view: View): Record<string, unknown> {
   return { view, boilFps: st.boil_fps ?? 12, wobble: st.wobble ?? 1, vignette: st.vignette ?? 0.16, handheld: st.handheld ?? 1, onion: !!(window as unknown as { __onion?: boolean }).__onion };
 }
 
+/** Loads every image a project uses (painted backgrounds, imported frames) into the engine's image cache. A missing file is skipped, not fatal. */
+export async function preloadMedia(b: Bundle): Promise<void> {
+  const NS = (window.Inkreel ?? (await loadEngine())) as unknown as { images: Record<string, HTMLImageElement> };
+  const urls = new Set<string>();
+  for (const s of b.scenes as unknown as { background?: { image?: string }; cels?: { image?: string }[] }[]) {
+    if (s.background?.image) urls.add(s.background.image);
+    for (const c of s.cels ?? []) if (c.image) urls.add(c.image);
+  }
+  for (const ch of Object.values(b.characters) as { parts?: { sprite?: { url: string } }[] }[]) for (const p of ch.parts ?? []) if (p.sprite) urls.add(p.sprite.url);
+  await Promise.all([...urls].filter(u => !NS.images[u]?.complete).map(u => new Promise<void>(res => {
+    const img = new Image(); img.onload = img.onerror = () => res(); img.src = u; NS.images[u] = img;
+  })));
+}
+
 export function quantize(T: number, b: Bundle): number {
   const f = Number(b.style.twos_fps ?? 12);
   return b.style.animate_on === 'twos' ? Math.floor(T * f + 1e-6) / f : T;

@@ -459,6 +459,7 @@ function shakeAt(scene, t) {
 }
 
 NS.prepReset = scene => PREP.delete(scene);   // call after editing a scene object in memory
+NS.images = NS.images || {};                  // url -> loaded Image (painted backgrounds, imported drawings); filled by the studio before rendering
 Object.assign(NS, {
   VW, VH, TAU, D2R, clamp, lerp, sgn, smooth, ease, EASE, h1, vn, wob, strHash, hexToRgb, rgbStr, shade, alpha, mixHex,
   JOINTS, setLibrary, getLibrary, WEAPONS, BUILD, prep, basePos, facingAt, sampleActor, solve, toWorld, anchorPos, dims,

@@ -1,7 +1,7 @@
 // Studio state. Playback time and the orbit view live in external stores so dragging/playing never re-renders React.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { api, type ApiError, type Bundle, type Recording, type SeriesData } from './lib/api';
-import { FLAT, loadEngine, type InkreelNS, type View } from './lib/engine';
+import { FLAT, loadEngine, preloadMedia, type InkreelNS, type View } from './lib/engine';
 
 export interface Scope { episode?: string; scene?: string }
 export interface Toast { id: number; kind: 'ok' | 'error' | 'info'; text: string; hint?: string; href?: string }
@@ -86,6 +86,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     const id = sidRef.current; if (!id) return;
     try {
       const [s, b] = await Promise.all([api.series(id), api.bundle(id)]);
+      await preloadMedia(b.bundle);                 // painted backgrounds and imported drawings must be decoded before the first frame
       setSeries(s); setBundle(b.bundle); setError(null);
     } catch (e) { fail(e); }
   }, [fail]);

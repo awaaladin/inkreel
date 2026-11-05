@@ -84,13 +84,15 @@ def create_app(store: Store, hub: Hub | None = None) -> FastAPI:
     exports.mkdir(exist_ok=True)
     audio_dir = store.root / "audio"
     audio_dir.mkdir(exist_ok=True)
+    media_dir = store.root / "media"
+    media_dir.mkdir(exist_ok=True)
 
     @app.middleware("http")
     async def nocache(request, call_next):
         resp = await call_next(request)
         if request.url.path.startswith("/api"):
             resp.headers["Cache-Control"] = "no-store"
-        elif request.url.path.startswith(("/engine", "/exports", "/audio")):
+        elif request.url.path.startswith(("/engine", "/exports", "/audio", "/media")):
             resp.headers["Cache-Control"] = "no-cache"      # cache, but revalidate (cheap 304) so edits show up
         return resp
 
@@ -282,6 +284,7 @@ def create_app(store: Store, hub: Hub | None = None) -> FastAPI:
         return Response(hit[1], media_type=mimetypes.guess_type(f.name)[0] or "application/octet-stream", headers={"ETag": etag, "Cache-Control": "no-cache"})
 
     app.mount("/exports", StaticFiles(directory=str(exports)), name="exports")
+    app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
     app.mount("/audio", StaticFiles(directory=str(audio_dir)), name="audio")
     if STUDIO_DIST.exists():
         app.mount("/assets", StaticFiles(directory=str(STUDIO_DIST / "assets")), name="assets")

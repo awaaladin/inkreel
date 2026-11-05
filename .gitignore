@@ -13,3 +13,7 @@ target/
 *.md
 !README.md
 !docs/USAGE.md
+
+serve.err
+serve.out
+workspaces/

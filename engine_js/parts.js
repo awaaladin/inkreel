@@ -52,6 +52,24 @@ function drawTraced(ctx, st, t, S0) {
     const delta = a - (rest[part.bone] || 0);
     const rot = (UP_BONES[part.bone] ? delta : -delta) * D2R;
     const z = part.z * H;
+    if (part.sprite) {   // a body part cut from the picture itself: draw its pixels, turned about the joint
+      const sp = part.sprite, img = NS.images && NS.images[sp.url];
+      if (img && img.complete && img.naturalWidth) {
+        if (volume) for (let k = 3; k >= 1; k--) {      // thickness slices behind it, darker
+          Z(z - k * 0.011 * H);
+          ctx.save(); ctx.translate(o[0], o[1]); ctx.rotate(rot); ctx.globalAlpha = 0.55; ctx.drawImage(img, -sp.ox * sp.k, -sp.oy * sp.k, sp.w * sp.k, sp.h * sp.k); ctx.restore();
+        }
+        Z(z); lastZ = z;
+        ctx.save(); ctx.translate(o[0], o[1]); ctx.rotate(rot); ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, -sp.ox * sp.k, -sp.oy * sp.k, sp.w * sp.k, sp.h * sp.k);
+        if (part.bone === 'head' && rig.face && st.mouth > 0.06) {
+          const fc = rig.face, mw = fc.w, mh = mw * (0.12 + 0.62 * st.mouth);
+          ctx.beginPath(); ctx.ellipse(fc.x, fc.y, mw / 2, mh / 2, 0, 0, 6.2832); ctx.fillStyle = '#35090f'; ctx.fill(); ctx.lineWidth = Math.max(1, H * 0.003); ctx.strokeStyle = '#1b0508'; ctx.stroke();
+        }
+        ctx.restore();
+      }
+      continue;
+    }
     if (volume) {   // thickness: a few darker copies behind the face of the part, so it reads as a slab when you orbit
       for (let k = 3; k >= 1; k--) {
         Z(z - k * 0.011 * H);

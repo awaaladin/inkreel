@@ -355,6 +355,9 @@ def create_character(ctx, a):
     {"id": {"type": "string"}, "name": {"type": "string"}, "episode": {"type": "string", "description": "episode id (default: current)"},
      "background": {"type": "string", "enum": V.BACKGROUNDS}, "time": {"type": "string", "enum": V.TIMES, "description": "time of day / mood palette"},
      "weather": {"type": "string", "enum": ["clear", "rain"]},
+     "image": {"type": "string", "description": "painted background: a file in the workspace media/ folder (import it first with `inkreel import-media`), e.g. forest_bg.jpg"},
+     "parallax": {"type": "number", "description": "0-1: how much the painted background follows the camera (default 0.3)"},
+     "anchor": {"type": "number", "description": "fraction (0-1) of the painted background's height that sits on the ground line (default 0.9)"},
      "wind": {"type": "number", "description": "0-2: how hard the wind blows (forest canopy, trees, bushes, ferns and grass sway)"},
      "palette": {"type": "object", "description": "optional colour overrides: skyTop, skyBot, ground, ground2, far, mid, water, water2, stone, wall, tint (css rgba)"},
      "width": {"type": "number", "description": "world width, 1280-4000 (default 1280)"},
@@ -397,6 +400,16 @@ def create_scene(ctx, a):
         bg["weather"] = choice(a, "weather", ["clear", "rain"])
     if a.get("wind") is not None:
         bg["wind"] = num(a, "wind", lo=0, hi=2)
+    if a.get("image"):
+        name = re.sub(r"[^A-Za-z0-9._-]", "", str(a["image"]).split("/")[-1])
+        if not (ctx.tx.store.root / "media" / name).is_file():
+            have = sorted(p.name for p in (ctx.tx.store.root / "media").glob("*")) if (ctx.tx.store.root / "media").exists() else []
+            raise OpError(f"no media file '{name}'", f"import it first: inkreel import-media <file>; have: {have or 'nothing yet'}")
+        bg["image"] = f"/media/{name}"
+    if a.get("parallax") is not None:
+        bg["parallax"] = num(a, "parallax", lo=0, hi=1)
+    if a.get("anchor") is not None:
+        bg["anchor"] = num(a, "anchor", lo=0.2, hi=1.5)
     if isinstance(a.get("palette"), dict):
         pal = bg.setdefault("palette", {})
         for k, v in a["palette"].items():

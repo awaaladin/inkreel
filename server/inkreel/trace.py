@@ -321,3 +321,114 @@ def preview(image: str | Path, layout: dict, out: str | Path) -> Path:
     out = Path(out)
     cv2.imwrite(str(out), bgr)
     return out
+
+
+# --------------------------------------------------------------------------- textured parts: the picture's own pixels, cut at the joints
+DEFAULT_WEIGHTS = {"torso": 0.115, "head": 0.1, "armF_up": 0.05, "armF_lo": 0.045, "armB_up": 0.05, "armB_lo": 0.045,
+                   "legF_up": 0.075, "legF_lo": 0.06, "legB_up": 0.075, "legB_lo": 0.06, "footF": 0.05, "footB": 0.05}
+ARM_BONES = ("armF_up", "armF_lo", "armB_up", "armB_lo")
+
+
+def sprites(image: str | Path, layout: dict, out_dir: str | Path, url_prefix: str, scale: float = 0.45) -> list[dict]:
+    """Cut every body part out of the picture as a transparent PNG. Returns `parts` records with a `sprite` instead of vector shapes.
+
+    * each part = the pixels of its bone, plus a round cap at its joint (so a bent knee or elbow shows no wedge-shaped gap);
+    * the near arm hangs in front of the body in a side view, so it is painted out of the torso/leg pictures (inpainting) and the body is whole when the arm swings away;
+    * with layout "mirror_back" the hidden far arm and leg are darker copies of the near ones.
+    """
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    flip = layout.get("facing", "right") == "left"
+    img = _load(image, flip)
+    h, w = img.shape[:2]
+    J = _joints(layout, flip, w)
+    fg = _foreground(img)
+    if fg.sum() < 200:
+        raise TraceError("could not find the character in the picture", "use a picture with a plain background or a transparent PNG")
+    fg = cv2.erode(fg.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))).astype(bool)   # drop the light keyline around the figure
+    wt = dict(DEFAULT_WEIGHTS)
+    wt.update(layout.get("weights") or {})
+    bone_of = assign_bones(fg, J, {k: v for k, v in wt.items()})
+    height = max(1.0, max(J[k][1] for k in ("toeF", "toeB", "ankleF", "ankleB")) - J["headTop"][1])
+    head_c = ((J["neck"][0] + J["headTop"][0]) / 2, (J["neck"][1] + J["headTop"][1]) / 2)
+    origin = {n: J[BONES[n][0]] for n in BONES}
+    origin["head"] = head_c
+    idx = {n: i for i, n in enumerate(DRAW_ORDER)}
+    bgr = img[:, :, :3].copy()
+
+    # the near arm out of the picture: inpaint where it lay over the body
+    arm_px = np.zeros((h, w), bool)
+    for n in ("armF_up", "armF_lo"):
+        arm_px |= bone_of == idx[n]
+    plate = bgr.copy()
+    if arm_px.any():
+        grown = cv2.dilate(arm_px.astype(np.uint8), np.ones((5, 5), np.uint8))
+        plate = cv2.inpaint(bgr, grown, 9, cv2.INPAINT_TELEA)
+
+    def row_span_fill(pm: np.ndarray) -> np.ndarray:
+        """arm pixels that lie between this part's own left and right edge on the same row (the arm was in front of it)."""
+        out = np.zeros_like(pm)
+        ys = np.nonzero(pm.any(axis=1))[0]
+        for y in ys:
+            xs = np.nonzero(pm[y])[0]
+            out[y, xs.min():xs.max() + 1] = True
+        return out & arm_px
+
+    f = scale
+    kk = float(layout.get("height_px", 300)) / height / f      # studio px per sprite px
+    parts = []
+    for name in DRAW_ORDER:
+        pm = bone_of == idx[name]
+        if pm.sum() < 8 and not (layout.get("mirror_back") and name.endswith("B")):
+            continue
+        if name.endswith("B") and layout.get("mirror_back") and pm.sum() < 50:
+            continue                                   # made later from the near twin
+        a_name = BONES[name][0]
+        ox0, oy0 = origin[name]
+        rad = wt[name] * height * (1.1 if name != "head" else 0.0)
+        cap = np.zeros((h, w), np.uint8)
+        if rad > 0:
+            cv2.circle(cap, (int(ox0), int(oy0)), int(rad), 1, -1)
+        grow = cv2.dilate(pm.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))).astype(bool)
+        m = (pm | grow | cap.astype(bool)) & fg
+        src = bgr
+        if name not in ARM_BONES:
+            m |= row_span_fill(pm) & fg
+            src = plate
+        if m.sum() < 8:
+            continue
+        parts.append(_cut(name, m, src, f, J, origin, out_dir, url_prefix, kk))
+
+    if layout.get("mirror_back"):
+        have = {p["bone"]: p for p in parts}
+        twin = {"armB_up": "armF_up", "armB_lo": "armF_lo", "legB_up": "legF_up", "legB_lo": "legF_lo", "footB": "footF"}
+        for back, front in twin.items():
+            if front in have and back not in have:
+                s0 = have[front]["sprite"]
+                src_png = cv2.imread(str(out_dir / f"{front}.png"), cv2.IMREAD_UNCHANGED)
+                dark = src_png.copy()
+                dark[:, :, :3] = (dark[:, :, :3].astype(np.float32) * 0.74).astype(np.uint8)
+                cv2.imwrite(str(out_dir / f"{back}.png"), dark)
+                parts.append({"bone": back, "z": DEPTH[back], "sprite": dict(s0, url=f"{url_prefix}/{back}.png")})
+    parts.sort(key=lambda p: DRAW_ORDER.index(p["bone"]))
+    # a drawing order that puts the far limbs first is already DRAW_ORDER; the sprite scale (studio px per sprite px) is filled in by the caller
+    return parts
+
+
+def _cut(name, m, src_bgr, f, J, origin, out_dir, url_prefix, shade):
+    ys, xs = np.nonzero(m)
+    x0, x1, y0, y1 = xs.min() - 2, xs.max() + 3, ys.min() - 2, ys.max() + 3
+    x0, y0 = max(0, x0), max(0, y0)
+    x1, y1 = min(m.shape[1], x1), min(m.shape[0], y1)
+    alpha = (m[y0:y1, x0:x1].astype(np.uint8) * 255)
+    alpha = cv2.GaussianBlur(alpha, (0, 0), 1.6)
+    rgb = src_bgr[y0:y1, x0:x1]
+    # bleed colour into the transparent edge so scaling does not pull in the light page colour
+    inv = (alpha < 200).astype(np.uint8)
+    rgb = cv2.inpaint(rgb, inv, 3, cv2.INPAINT_TELEA) if inv.any() and (~inv.astype(bool)).any() else rgb
+    rgba = np.dstack([rgb, alpha])
+    nw, nh = max(1, int(round(rgba.shape[1] * f))), max(1, int(round(rgba.shape[0] * f)))
+    small = cv2.resize(rgba, (nw, nh), interpolation=cv2.INTER_AREA)
+    cv2.imwrite(str(Path(out_dir) / f"{name}.png"), small)
+    ox, oy = origin[name]
+    return {"bone": name, "z": DEPTH[name], "sprite": {"url": f"{url_prefix}/{name}.png", "ox": round((ox - x0) * f, 1), "oy": round((oy - y0) * f, 1), "w": nw, "h": nh, "k": round(shade, 5)}}

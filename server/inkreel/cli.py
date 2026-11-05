@@ -55,7 +55,7 @@ def cmd_op(a):
 def cmd_run(a):
     """Batch: a JSON file {"ops": [{"name":..., "args":{...}}, ...]} applied as one undoable turn."""
     s = open_store(a)
-    spec = json.loads(Path(a.script).read_text(encoding="utf-8"))
+    spec = json.loads(Path(a.script).read_text(encoding="utf-8-sig"))
     sess = Session(s, a.series, spec.get("episode"))
     res = sess.run([(o["name"], o.get("args", {})) for o in spec["ops"]], src=a.src, label=spec.get("label", f"run {Path(a.script).name}"))
     bad = 0
@@ -103,7 +103,7 @@ def cmd_snapshot(a):
 
 
 def _traced_layout(a):
-    return json.loads(Path(a.layout).read_text(encoding="utf-8"))
+    return json.loads(Path(a.layout).read_text(encoding="utf-8-sig"))
 
 
 def cmd_trace_grid(a):
@@ -129,13 +129,36 @@ def cmd_trace(a):
         console.print(f"[red]{escape(str(e))}[/]")
         return 1
     cid = a.character
+    if a.sprites:      # use the picture's own pixels for every body part (keeps the shading, line work and face of the original art)
+        from . import trace as T2
+        parts = T2.sprites(a.image, layout, s.root / "media" / cid, f"/media/{cid}")
+        rec["parts"] = parts
+        rec["rig"]["sprites"] = True
     rec = {"id": cid, "name": layout.get("name", cid.title()), "notes": layout.get("notes", ""), **rec}
     if a.skin or layout.get("skin"):
         rec["skin"] = a.skin or layout["skin"]
     with s.turn(a.series, f"trace character {cid}", "user") as tx:
         tx.write(f"series/{a.series}/libraries/characters/{cid}.json", rec)
-    n = sum(len(sh["rings"]) for p in rec["parts"] for sh in p["shapes"])
-    console.print(f"[green]traced[/] {cid}: {len(rec['parts'])} parts, {n} shapes, height {rec['height']}px")
+    n = sum(len(sh["rings"]) for p in rec["parts"] for sh in p.get("shapes", []))
+    console.print(f"[green]traced[/] {cid}: {len(rec['parts'])} parts" + (", from the picture's own pixels" if a.sprites else f", {n} shapes") + f", height {rec['height']}px")
+
+
+def cmd_import_media(a):
+    """Copy images (painted backgrounds, drawn frames, sprites) into the workspace media/ folder so scenes can use them."""
+    import re
+    import shutil
+    s = open_store(a)
+    dest = s.root / "media"
+    dest.mkdir(exist_ok=True)
+    for f in a.files:
+        src = Path(f)
+        if not src.is_file():
+            console.print(f"[red]not a file: {escape(str(src))}[/]")
+            return 1
+        name = re.sub(r"[^A-Za-z0-9._-]", "_", src.name)
+        shutil.copyfile(src, dest / name)
+        console.print(f"[green]imported[/] {name} -> /media/{name}")
+    return 0
 
 
 def cmd_schema(a):
@@ -182,7 +205,8 @@ def main(argv=None):
     p = add("trace-grid", cmd_trace_grid, "picture with coordinate grid, to read joint positions"); p.add_argument("image"); p.add_argument("--out"); p.add_argument("--step", type=int, default=50)
     p = add("trace-preview", cmd_trace_preview, "preview the joint/part layout on the picture"); p.add_argument("image"); p.add_argument("layout"); p.add_argument("--out")
     p = add("trace", cmd_trace, "trace a picture into a rigged vector character"); p.add_argument("series"); p.add_argument("character"); p.add_argument("image"); p.add_argument("layout")
-    p.add_argument("--colors", type=int, default=10); p.add_argument("--detail", type=float, default=1.0); p.add_argument("--skin")
+    p.add_argument("--sprites", action="store_true", help="cut the picture's own pixels instead of flat vector shapes"); p.add_argument("--colors", type=int, default=10); p.add_argument("--detail", type=float, default=1.0); p.add_argument("--skin")
+    p = add("import-media", cmd_import_media, "copy images into the workspace media folder"); p.add_argument("files", nargs="+")
     p = add("schema", cmd_schema, "export JSON Schemas from the models"); p.add_argument("--out", default=str(REPO / "schemas"))
     a = ap.parse_args(argv)
     try:

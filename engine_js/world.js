@@ -246,9 +246,39 @@ BG.void = (ctx, R, pal, gy) => {
   line(ctx, [x0, gy + 6], [x1, gy + 6], S, 3);
 };
 
+// A painted background (imported image) with parallax, like an anime BG: the camera slides over a painting.
+// bg.image = '/media/file.jpg'; bg.parallax (0..1, default 0.3) how much it follows the camera; bg.anchor = fraction of the image height that sits on the ground line.
+// A soft dirt path is painted along the ground so characters have something to walk on (bg.path = false to hide it).
+function drawImageBG(ctx, R, pal, gy, bg, img) {
+  const f = bg.parallax === undefined ? 0.3 : bg.parallax, camMin = VW / 2, camMax = Math.max(camMin, R.W - VW / 2);
+  const iw = Math.max(1800, VW * 1.35 + f * (camMax - camMin) + 80), ih = iw * img.naturalHeight / img.naturalWidth;
+  const m = (iw - VW - f * (camMax - camMin)) / 2, xl = f * camMin - VW / 2 - m, anchor = bg.anchor === undefined ? 0.9 : bg.anchor;
+  layer(ctx, R, f, () => { ctx.drawImage(img, xl, gy - anchor * ih, iw, ih); });
+  if (bg.path === false) return;
+  const x0 = -1600, x1 = R.W + 1600, top = gy - 46, wind = ((R.scene.background || {}).wind || 0);
+  layer(ctx, R, 1, () => {
+    const gr = ctx.createLinearGradient(0, top, 0, top + 70); gr.addColorStop(0, alpha(pal.ground, 0)); gr.addColorStop(1, alpha(pal.ground, 1));
+    ctx.fillStyle = gr; ctx.fillRect(x0, top, x1 - x0, 70);
+    const lo = ctx.createLinearGradient(0, top + 70, 0, gy + 700); lo.addColorStop(0, pal.ground); lo.addColorStop(1, pal.ground2);
+    ctx.fillStyle = lo; ctx.fillRect(x0, top + 69, x1 - x0, 800);
+    ctx.fillStyle = alpha(pal.ground2, 0.55);                       // worn tracks and pebbles
+    for (let x = x0; x < x1; x += 46) { const w = 24 + rnd(x, 5) * 50, y = gy + 18 + rnd(x, 6) * 150; ctx.beginPath(); ctx.ellipse(x, y, w, 3 + rnd(x, 7) * 4, 0, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = alpha(pal.stone, 0.8);
+    for (let x = x0; x < x1; x += 120) { const y = gy + 10 + rnd(x, 8) * 170, r = 2 + rnd(x, 9) * 4; ctx.beginPath(); ctx.ellipse(x + rnd(x, 10) * 60, y, r * 1.6, r, 0, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = alpha('#2f6a2a', 0.85); ctx.lineCap = 'round'; ctx.lineWidth = 2.4;      // grass tufts along the path edge, swaying in the wind
+    for (let x = x0; x < x1; x += 16) { const hh = 14 + rnd(x, 11) * 22, sw = Math.sin(R.t * 2 + x * 0.05) * (2 + 7 * wind); ctx.beginPath(); ctx.moveTo(x, top + 42 + rnd(x, 12) * 12); ctx.quadraticCurveTo(x + sw * 0.5, top + 42 - hh * 0.5, x + sw, top + 42 - hh); ctx.stroke(); }
+  });
+}
+
 function drawBackground(ctx, R) {
   const bg = R.scene.background || {}, pal = palette(bg), gy = R.scene.groundY || 570;
   R.pal = pal;
+  if (bg.image) {
+    const img = NS.images && NS.images[bg.image];
+    if (img && img.complete && img.naturalWidth) { drawImageBG(ctx, R, pal, gy, bg, img); return; }
+    gradRect(ctx, -1600, -800, R.W + 1600, gy, pal.skyTop, pal.skyBot);   // image still loading: sky only
+    return;
+  }
   (BG[bg.preset] || BG.beach)(ctx, R, pal, gy);
 }
 
