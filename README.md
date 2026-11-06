@@ -55,6 +55,14 @@ inkreel trace my_series kabi picture.png layout.json
 
 The traced character walks, fights, speaks and orbits like any other, and keeps your picture's colours and shapes. Best results come from a side-view picture with a plain or transparent background. A front-facing picture is cut the same way, but a side-view walk will swing its limbs flat, like a paper cut-out.
 
+### Checking a drawing against a reference (computer vision)
+
+```
+inkreel compare reference.png my_drawing.png --layout layout.json --out compare_out
+```
+
+Lines the drawing up with the reference (same height, same ground line) and reports, body part by body part, where it is too wide, too narrow, or shifted forward/back. Writes `overlay.png` (red = only in the reference, blue = only in the drawing). `mpvision.py` adds MediaPipe face landmarks (model from the `mirror` app, in `models/`, not committed).
+
 ## Data
 
 Everything is plain JSON under your workspace folder (`series/<id>/...`), safe to hand-edit and to keep in git. History (undo / redo, snapshots) is in `.inkreel/index.sqlite`.

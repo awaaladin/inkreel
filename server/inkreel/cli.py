@@ -161,6 +161,19 @@ def cmd_import_media(a):
     return 0
 
 
+def cmd_compare(a):
+    """Measure a drawing against a reference picture (overlay + per-body-part differences)."""
+    from . import vision
+    joints = json.loads(Path(a.layout).read_text(encoding="utf-8-sig"))["joints"] if a.layout else None
+    res = vision.compare(a.reference, a.drawing, a.out, joints)
+    console.print(f"overlap (IoU) [bold]{res['iou']}[/]   proportions: reference aspect {res['ref_aspect']} vs drawing {res['mine_aspect']}")
+    for n, b in res["bands"].items():
+        console.print(f"  {n:<6} width {b['mine_width_pct']:>5}% vs {b['ref_width_pct']:>5}%  ({b['width_diff_pct']:+.0f}%)  front {b['front_edge_shift_pct']:+.1f}  back {b['back_edge_shift_pct']:+.1f}  fit {b['band_iou']}")
+    for line in vision.advice(res):
+        console.print(f"  - {escape(line)}")
+    console.print(f"overlay: {res['overlay']}")
+
+
 def cmd_schema(a):
     from . import model as M
     out = Path(a.out)
@@ -207,6 +220,7 @@ def main(argv=None):
     p = add("trace", cmd_trace, "trace a picture into a rigged vector character"); p.add_argument("series"); p.add_argument("character"); p.add_argument("image"); p.add_argument("layout")
     p.add_argument("--sprites", action="store_true", help="cut the picture's own pixels instead of flat vector shapes"); p.add_argument("--colors", type=int, default=10); p.add_argument("--detail", type=float, default=1.0); p.add_argument("--skin")
     p = add("import-media", cmd_import_media, "copy images into the workspace media folder"); p.add_argument("files", nargs="+")
+    p = add("compare", cmd_compare, "measure a drawing against a reference picture"); p.add_argument("reference"); p.add_argument("drawing"); p.add_argument("--layout"); p.add_argument("--out", default="compare_out")
     p = add("schema", cmd_schema, "export JSON Schemas from the models"); p.add_argument("--out", default=str(REPO / "schemas"))
     a = ap.parse_args(argv)
     try:
